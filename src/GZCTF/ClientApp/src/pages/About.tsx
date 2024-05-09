@@ -20,7 +20,7 @@ const About: FC = () => {
       <Stack justify="space-between" h="calc(100vh - 16px)">
         <Center h="calc(100vh - 16px)">
           <Title order={2} className={classes.watermark}>
-            GZ::CTF
+            SDCTF
           </Title>
           <Text className={classes.bio}>
             &gt; {config?.slogan ?? t('common.content.about.slogan')}
@@ -55,7 +55,7 @@ const About: FC = () => {
                       }}
                       className={classes.title}
                     >
-                      GZ<span className={classes.brand}>::</span>CTF
+                      SDCTF
                     </Title>
                     <Group ml="-18px" mt="-5px">
                       <Anchor

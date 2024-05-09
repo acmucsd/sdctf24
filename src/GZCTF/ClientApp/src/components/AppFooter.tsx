@@ -35,9 +35,9 @@ const AppFooter: FC = () => {
         <Center mx="auto" h="100%">
           <Stack gap="sm" w={isMobile ? '100%' : '80%'}>
             <Stack w="100%" align="center" gap={2}>
-              <MainIcon style={{ maxWidth: isMobile ? '3rem' : '4rem', height: 'auto' }} />
+              <MainIcon style={{ maxWidth: isMobile ? '3rem' : '6rem', height: 'auto' }} />
               <Text fw="bold" size={isMobile ? '2rem' : '2.5rem'}>
-                GZ<span className={logoClasses.brand}>::</span>CTF
+                SDCTF
               </Text>
             </Stack>
 

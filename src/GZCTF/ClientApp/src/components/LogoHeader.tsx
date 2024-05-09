@@ -35,10 +35,7 @@ export const LogoHeader = forwardRef<HTMLDivElement, GroupProps>((props, ref) =>
   return (
     <Group ref={ref} wrap="nowrap" {...props}>
       <MainIcon style={{ maxWidth: 60, height: 'auto' }} />
-      <Title className={classes.title}>
-        {config?.title ?? 'GZ'}
-        <span className={classes.brand}>::</span>CTF
-      </Title>
+      <Title className={classes.title}>{config?.title ?? 'GZ'}CTF</Title>
     </Group>
   )
 })
