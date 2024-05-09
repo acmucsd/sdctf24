@@ -5,6 +5,8 @@
 
 # GZ::CTF
 
+[Upstream repository (GZTimeWalker/GZCTF)](https://github.com/GZTimeWalker/GZCTF)
+
 [![publish](https://github.com/GZTimeWalker/GZCTF/actions/workflows/ci.yml/badge.svg)](https://github.com/GZTimeWalker/GZCTF/actions/workflows/ci.yml)
 ![version](https://img.shields.io/github/v/release/GZTimeWalker/GZCTF?include_prereleases&label=version)
 ![license](https://img.shields.io/github/license/GZTimeWalker/GZCTF?color=FF5531)
