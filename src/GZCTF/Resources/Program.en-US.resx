@@ -166,7 +166,7 @@
     <value>Registration has been disabled</value>
   </data>
   <data name="Account_ResetPasswordFromAdmin" xml:space="preserve">
-    <value>Please contact the administrator to reset the password</value>
+    <value>Email verification is not enabled, please contact the administrator to reset the password</value>
   </data>
   <data name="Account_SendEmailChange" xml:space="preserve">
     <value>Send email to user for email change</value>
@@ -522,7 +522,7 @@
   <data name="Game_DeadlineExpired" xml:space="preserve">
     <value>Submission due date has passed</value>
   </data>
-  <data name="Game_End" xml:space="preserve">
+  <data name="Game_Ended" xml:space="preserve">
     <value>The game has ended</value>
   </data>
   <data name="Game_InOtherTeam" xml:space="preserve">
@@ -684,6 +684,9 @@
   <data name="Init_AdminCreationFailed" xml:space="preserve">
     <value>Failed to create the administrator account, error message: {0}</value>
   </data>
+  <data name="Init_NoFilesDir" xml:space="preserve">
+    <value>Data directory {0} is not mounted, files may be lost, please configure the data persistence directory correctly!</value>
+  </data>
   <data name="Init_CaptureNotAvailable" xml:space="preserve">
     <value>Unable to capture traffic when not using platform proxy mode!</value>
   </data>
@@ -751,44 +754,7 @@
     <value>Send mail: {0}</value>
   </data>
   <data name="MailSender_Template" xml:space="preserve">
-    <value>&lt;head&gt;
-    &lt;meta content="text/html; charset=utf-8" http-equiv="Content-Type"/&gt;
-&lt;/head&gt;
-&lt;body&gt;
-&lt;div style="max-width: 544px; margin: 0 auto; padding: 20px"&gt;
-    &lt;h2 style="text-align: center"&gt;{title}&lt;/h2&gt;
-    &lt;p&gt;Hello, {userName}！&lt;/p&gt;
-    &lt;p style="text-indent: 2em"&gt;{information}&lt;/p&gt;
-    &lt;p style="text-align: center; padding: 20px"&gt;
-        &lt;a
-                href="{url}"
-                style="
-          font: 1rem Arial;
-          white-space: nowrap;
-          text-decoration: none;
-          background-color: #000000;
-          color: #ffffff;
-          padding: 10px 20px 10px 20px;
-          border: 1px solid #888888;
-          border-radius: 7px;
-          margin: 10px auto;
-        "
-        &gt;
-            {btnmsg}
-        &lt;/a&gt;
-    &lt;/p&gt;
-    &lt;div style="font-size: 0.8rem"&gt;
-        &lt;p&gt;
-            If the above button is not valid, please copy this link to your browser:&lt;br/&gt;&lt;span
-                style="word-break: break-all; font: 0.8em monospace"
-        &gt;{url}
-        &lt;/span&gt;
-        &lt;/p&gt;
-        &lt;p&gt;If you have not done so, please ignore this email.&lt;/p&gt;
-    &lt;/div&gt;
-    &lt;p style="font-size: 0.7em; text-align: right; color: #333"&gt;{platform} @ {nowtime}&lt;/p&gt;
-&lt;/div&gt;
-&lt;/body&gt;</value>
+      <value>&lt;head&gt;    &lt;meta content="text/html; charset=utf-8" http-equiv="Content-Type"/&gt;&lt;/head&gt;&lt;body&gt;&lt;div style="max-width: 544px; margin: 0 auto; padding: 20px"&gt;    &lt;h2 style="text-align: center"&gt;{title}&lt;/h2&gt;    &lt;p&gt;Hello, {userName}！&lt;/p&gt;    &lt;p style="text-indent: 2em"&gt;{information}&lt;/p&gt;    &lt;p style="text-align: center; padding: 20px"&gt;        &lt;a                href="{url}"                style="          font: 1rem Arial;          white-space: nowrap;          text-decoration: none;          background-color: #000000;          color: #ffffff;          padding: 10px 20px 10px 20px;          border: 1px solid #888888;          border-radius: 7px;          margin: 10px auto;        "        &gt;            {btnmsg}        &lt;/a&gt;    &lt;/p&gt;    &lt;div style="font-size: 0.8rem"&gt;        &lt;p&gt;            If the above button is not valid, please copy this link to your browser: &lt;br/&gt;&lt;span                style="word-break: break-all; font: 0.8em monospace"        &gt;{url}        &lt;/span&gt;        &lt;/p&gt;        &lt;p&gt;If you have not done so, please ignore this email. &lt;/p&gt;    &lt;/div&gt;    &lt;p style="font-size: 0.7em; text-align: right; color: #333"&gt;{platform} @ {nowtime}&lt;/p&gt;&lt;/div&gt;&lt;/body&gt;</value>
   </data>
   <data name="MailSender_VerifyEmailButton" xml:space="preserve">
     <value>Verify Email</value>
@@ -1062,5 +1028,8 @@
   </data>
   <data name="Signature_Invalid" xml:space="preserve">
     <value>Invalid signature</value>
+  </data>
+  <data name="Error_InternalServerError" xml:space="preserve">
+    <value>Internal server error</value>
   </data>
 </root>

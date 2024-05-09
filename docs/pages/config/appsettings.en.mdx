@@ -1,6 +1,6 @@
 import { Callout } from "nextra-theme-docs";
 
-# Configuration of appsettings.json 
+# Configuration of appsettings.json
 
 `appsettings.json` is the core configuration file of GZCTF, which is configured by mounting into the container. This document will introduce the meaning of each field in the configuration file.
 
@@ -12,7 +12,7 @@ You need to restart the GZCTF service every time you update `appsettings.json` t
 
 ## Structure of the configuration file
 
-Here is a complete example of configuration: 
+Here is a complete example of configuration:
 
 ```json
 {
@@ -27,6 +27,43 @@ Here is a complete example of configuration:
       "Default": "Information",
       "Microsoft": "Warning",
       "Microsoft.Hosting.Lifetime": "Information"
+    },
+    "Loki": {
+      "Enable": true,
+      "EndpointUri": "http://loki:3100",
+      "Labels": [
+        {
+          "Key": "app",
+          "Value": "gzctf"
+        }
+      ],
+      "PropertiesAsLabels": [ "app" ],
+      "Credentials": {
+        "Login": "login",
+        "Password": "password"
+      },
+      "Tenant": "my-tenant",
+      "MinimumLevel": "Trace"
+    }
+  },
+  "Telemetry": {
+    "Enable": false,
+    "Prometheus": {
+      "Enable": false,
+      "Port": 3000,
+      "TotalNameSuffixForCounters": false
+    },
+    "OpenTelemetry": {
+      "Enable": false,
+      "Protocol": "Grpc",
+      "EndpointUri": "http://jaeger-collector:4317"
+    },
+    "AzureMonitor": {
+      "Enable": false,
+      "ConnectionString": "InstrumentationKey=12345678-abcd-abcd-abcd-12345678..."
+    },
+    "Console": {
+      "Enable": false
     }
   },
   "EmailConfig": {
@@ -90,6 +127,14 @@ Here is a complete example of configuration:
     "TrustedProxies": ["10.0.0.1"]
   },
   "Kestrel": {
+    "Endpoints": {
+      "Web": {
+        "Url": "http://*:8080"
+      },
+      "Prometheus": {
+        "Url": "http://*:3000"
+      }
+    },
     "Limits": {
       "MaxResponseBufferSize": 2048,
       "MaxRequestBufferSize": 1048576,
@@ -125,6 +170,50 @@ GZCTF uses PostgreSQL as the backend database and data persistence, and Redis as
 GZCTF only supports PostgreSQL as the database, and does not support MySQL and other databases. Please fill in the correct database connection settings in the configuration file.
 
 </Callout>
+
+### Logging
+
+You can configure the logging level and scopes, besides, GZCTF also supports sending logs to Loki server.
+
+- **LogLevel**: The minimal logging level per namespace.
+- **Loki**: The configuration of Loki server.
+
+  - **Enable**: Enable it or not.
+  - **EndpointUri**: The URI of Loki server.
+  - **Labels**: Optional. The global log event labels.
+  - **PropertiesAsLabels**: Optional. The list of properties, which should be mapped to Loki labels.
+  - **Credentials**: Optional. Credentials, which will be used for basic auth
+  - **Tenant**: Optional. The Tenant ID used for sending logs to Loki server.
+  - **MinimumLevel**: Optional. Minimal logging level.
+
+Available logging levels: Trace, Debug, Information, Warning, Error, Critical, None.
+
+### Telemetry
+
+GZCTF supports metrics and distributed tracing. You can configure the providers you want to use.
+
+- **Enable**: Enable telemetry support or not.
+
+- **Prometheus**: Prometheus endpoint support.
+
+  - **Enable**: Enable it or not.
+  - **Port**: Optional. Set the port that Prometheus `/metrics` endpoint listens on. If this is configured, additional manual configuration of `Kestrel.Endpoints` is required to make the server listen to the specified port normally.
+  - **TotalNameSuffixForCounters**: Optional. Whether to include `_total` suffix in counters or not.
+
+- **OpenTelemetry**: Exporting metrics and tracing data to OpenTelemetry.
+
+  - **Enable**: Enable it or not.
+  - **Protocol**: `Grpc` or `HttpProtobuf`.
+  - **EndpointUri**: The OpenTelemetry endpoint URI to push telemetry data.
+
+- **AzureMonitor**: Exporting metrics and tracing data to ApplicationInsights.
+
+  - **Enable**: Enable it or not.
+  - **ConnectionString**: The connection string.
+
+- **Console**: Exporting tracing data to console.
+
+  - **Enable**: Enable it or not.
 
 ### EmailConfig
 
@@ -176,13 +265,19 @@ Heer we can configure the container backend which is required for creating conta
 - **Namespace:** Kubernetes namespace, used to create the namespace of the challenge instance, the default is `gzctf-challenges`
 - **ConfigPath:** Kubernetes configuration file path, used to connect to the cluster, default value is `kube-config.yaml`
 - **AllowCIDR:** White list of CIDR that can access the Pod
-- **DNS:** custom DNS server list 
+- **DNS:** custom DNS server list
 
 To use the default behavior, please put the cluster connection configuration into the `kube-config.yaml` file and mount it to the `/app` directory. Do not change it if you don't understand the behavior of the experimental function.
 
 <Callout type="info">
 
 Please note that you need to change the `server` field in the `kube-config.yaml` file to point to the API Server address of the cluster. The default address of the cluster is generally `https://127.0.0.1:6443`, which needs to be changed to the actual address of the cluster.
+
+</Callout>
+
+<Callout type="info" emoji="👾">
+
+In order to meet the network policy, GZCTF will create a NetworkPolicy named `gzctf-policy` in the Namespace of the challenge to restrict access. GZCTF will automatically detect whether this NetworkPolicy already exists. If it exists, it will not be created again, so you can customize the network policy by creating or editing this NetworkPolicy.
 
 </Callout>
 
@@ -245,4 +340,5 @@ For other fields, please refer to the official documentation: [Configure ASP.NET
 
 Kestrel is the built-in web server used by GZCTF. With this configuration, you can control the behavior of Kestrel, such as specifying the HTTP protocol, modifying the request size limit, and more.
 
-For specific configurable fields, please refer to the properties of the `KestrelServerOptions` class in the official documentation: [KestrelServerOptions class](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.server.kestrel.core.kestrelserveroptions)
+- **Endpoints**: Configure the URL that the web server listens on.
+- For other configurable fields, please refer to the properties of the `KestrelServerOptions` class in the official documentation: [KestrelServerOptions class](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.server.kestrel.core.kestrelserveroptions)

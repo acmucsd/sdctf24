@@ -26,11 +26,14 @@
         "add": "添加提示"
       },
       "new": "新建题目",
+      "next": "下一题",
       "preview": "预览题目",
+      "previous": "上一题",
       "test_container": {
         "create": "创建测试容器",
         "destroy": "销毁测试容器"
-      }
+      },
+      "update_accept_count": "更新解题计数"
     },
     "games": {
       "challenges": {
@@ -179,8 +182,7 @@
           "label": "队伍人数限制"
         },
         "organizations": {
-          "add": "+ 添加组织 \"{{org}}\"",
-          "description": "添加参赛组织以开启分组榜单",
+          "description": "添加参赛组织以开启分组榜单，留空则不分组",
           "label": "参赛可选组织列表"
         },
         "poster": "比赛海报",
@@ -268,12 +270,24 @@
           "label": "启用验证码"
         }
       },
-      "game": {
+      "container": {
         "auto_destroy": {
-          "description": "是否在用户开启题目实例但达到上限时自动销毁旧实例",
+          "description": "是否在用户实例达到上限时自动销毁旧实例",
           "label": "自动销毁旧实例"
         },
-        "title": "比赛策略"
+        "default_lifetime": {
+          "description": "容器默认生命周期",
+          "label": "默认有效期（分钟）"
+        },
+        "extension_duration": {
+          "description": "容器每次续期的时长",
+          "label": "续期时长（分钟）"
+        },
+        "renewal_window": {
+          "description": "容器到期前多少分钟内可以续期",
+          "label": "续期窗口（分钟）"
+        },
+        "title": "容器策略"
       },
       "platform": {
         "footer": {
@@ -343,6 +357,7 @@
         "created": "题目已创建",
         "deleted": "题目已删除",
         "flag": {
+          "copied": "flag 已复制到剪贴板",
           "created": "flag 已创建",
           "deleted": "flag 已删除"
         },
@@ -357,6 +372,7 @@
       },
       "created": "比赛已创建",
       "info": {
+        "accept_count_updated": "解题数量已刷新",
         "deleted": "比赛已删除",
         "info_updated": "比赛信息已更新",
         "poster": {
@@ -412,7 +428,7 @@
           }
         }
       },
-      "organizations": "无指定可选参赛组织，将允许无组织队伍参赛",
+      "organizations": "回车添加参赛组织",
       "participation": {
         "bio": "（无简介）",
         "team": "（无名队伍）"

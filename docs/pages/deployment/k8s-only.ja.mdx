@@ -6,7 +6,7 @@ import { Callout } from "nextra-theme-docs";
 
 このガイドは、**すでにK8sを使用した経験がある**ユーザー向けです。この記事では、K8sクラスタの構築方法や`kubectl`などのコマンドの使い方については**紹介していません**。また、記事中にはK8sの専門用語が含まれている可能性があり、一定の基礎知識が必要です。
 
-この記事では、K8sクラスタ内でGZCTFをデプロイする方法に焦点を当てています。GZCTF自体の設定チュートリアルについては、[クイックスタート](/quick-start)を参照してください。
+この記事では、K8sクラスタ内でGZCTFをデプロイする方法に焦点を当てています。GZCTF自体の設定チュートリアルについては、[クイックスタート](/ja/quick-start)を参照してください。
 
 </Callout>
 
@@ -143,6 +143,9 @@ import { Callout } from "nextra-theme-docs";
              env:
                - name: GZCTF_ADMIN_PASSWORD
                  value: xxx # 管理者パスワード
+               # choose your backend language `en_US` / `zh_CN` / `ja_JP`
+               - name: LC_ALL
+                 value: ja_JP.UTF-8
              ports:
                - containerPort: 8080
                  name: http
@@ -155,9 +158,6 @@ import { Callout } from "nextra-theme-docs";
                - name: gzctf-kube-config
                  mountPath: /app/kube-config.yaml
                  subPath: kube-config
-               # .log ファイルの永続化ストレージが必要な場合
-               # 各 GZCTF インスタンスに /app/log に追加のボリュームをマウントしてください
-               # GZCTF は自動的にログファイルを処理し、自動的に rotate と compress を行います
              resources:
                requests:
                  cpu: 1000m
@@ -261,8 +261,8 @@ import { Callout } from "nextra-theme-docs";
        app: gzctf
      ports:
        - protocol: TCP
-         port: 80
-         targetPort: 80
+         port: 8080
+         targetPort: 8080
    ---
    apiVersion: v1
    kind: Service
@@ -314,7 +314,7 @@ import { Callout } from "nextra-theme-docs";
                  service:
                    name: gzctf
                    port:
-                     number: 80
+                     number: 8080
    ```
 
 5. Traefikの追加設定

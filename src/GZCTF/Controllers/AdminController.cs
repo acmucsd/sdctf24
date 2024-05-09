@@ -82,8 +82,11 @@ public class AdminController(
         foreach (PropertyInfo prop in typeof(ConfigEditModel).GetProperties())
         {
             var value = prop.GetValue(model);
-            if (value is not null)
-                await configService.SaveConfig(prop.PropertyType, value, token);
+
+            if (value is null)
+                continue;
+
+            await configService.SaveConfig(prop.PropertyType, value, token);
         }
 
         return Ok();
@@ -165,7 +168,7 @@ public class AdminController(
                 Team? team = teams.Find(team => team.Name == teamName);
                 if (team is null)
                 {
-                    team = await teamRepository.CreateTeam(new(teamName), user, token);
+                    team = await teamRepository.CreateTeam(new() { Name = teamName }, user, token);
                     teams.Add(team);
                 }
                 else
@@ -200,17 +203,20 @@ public class AdminController(
     /// <response code="403">禁止访问</response>
     [HttpPost("Users/Search")]
     [ProducesResponseType(typeof(ArrayResponse<UserInfoModel>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> SearchUsers([FromQuery] string hint, CancellationToken token = default) =>
-        Ok((await userManager.Users.Where(item =>
-                    EF.Functions.Like(item.UserName!, $"%{hint}%") ||
-                    EF.Functions.Like(item.StdNumber, $"%{hint}%") ||
-                    EF.Functions.Like(item.Email!, $"%{hint}%") ||
-                    EF.Functions.Like(item.Id.ToString(), $"%{hint}%") ||
-                    EF.Functions.Like(item.RealName, $"%{hint}%")
-                )
-                .OrderBy(e => e.Id).Take(30).ToArrayAsync(token))
-            .Select(UserInfoModel.FromUserInfo)
-            .ToResponse());
+    public async Task<IActionResult> SearchUsers([FromQuery] string hint, CancellationToken token = default)
+    {
+        var loweredHint = hint.ToLower();
+        UserInfo[] data = await userManager.Users.Where(item =>
+            item.UserName!.ToLower().Contains(loweredHint) ||
+            item.StdNumber.ToLower().Contains(loweredHint) ||
+            item.Email!.ToLower().Contains(loweredHint) ||
+            item.PhoneNumber!.ToLower().Contains(loweredHint) ||
+            item.Id.ToString().ToLower().Contains(loweredHint) ||
+            item.RealName.ToLower().Contains(loweredHint)
+        ).OrderBy(e => e.Id).Take(30).ToArrayAsync(token);
+
+        return Ok(data.Select(UserInfoModel.FromUserInfo).ToResponse());
+    }
 
     /// <summary>
     /// 获取全部队伍信息
@@ -295,7 +301,7 @@ public class AdminController(
 
         if (model.UserName is not null && model.UserName != user.UserName)
         {
-            var result = await userManager.SetUserNameAsync(user, model.UserName);
+            IdentityResult result = await userManager.SetUserNameAsync(user, model.UserName);
 
             if (!result.Succeeded)
                 return HandleIdentityError(result.Errors);
@@ -303,7 +309,7 @@ public class AdminController(
 
         if (model.Email is not null && model.Email != user.Email)
         {
-            var result = await userManager.SetEmailAsync(user, model.Email);
+            IdentityResult result = await userManager.SetEmailAsync(user, model.Email);
 
             if (!result.Succeeded)
                 return HandleIdentityError(result.Errors);
@@ -584,5 +590,5 @@ public class AdminController(
 
     IActionResult HandleIdentityError(IEnumerable<IdentityError> errors) =>
         BadRequest(new RequestResponse(errors.FirstOrDefault()?.Description ??
-                                                  localizer[nameof(Resources.Program.Identity_UnknownError)]));
+                                       localizer[nameof(Resources.Program.Identity_UnknownError)]));
 }

@@ -29,6 +29,7 @@ public class EditController(
     IPostRepository postRepository,
     IContainerRepository containerRepository,
     IGameChallengeRepository challengeRepository,
+    IGameInstanceRepository instanceRepository,
     IGameNoticeRepository gameNoticeRepository,
     IGameRepository gameRepository,
     IContainerManager containerService,
@@ -251,9 +252,8 @@ public class EditController(
         return await gameRepository.DeleteGame(game, token) switch
         {
             TaskStatus.Success => Ok(),
-            TaskStatus.Failed => BadRequest(
-                new RequestResponse(localizer[nameof(Resources.Program.Game_DeletionFailed)])),
-            _ => throw new NotImplementedException()
+            _ => BadRequest(
+                new RequestResponse(localizer[nameof(Resources.Program.Game_DeletionFailed)]))
         };
     }
 
@@ -483,6 +483,32 @@ public class EditController(
         Ok((await challengeRepository.GetChallenges(id, token)).Select(ChallengeInfoModel.FromChallenge));
 
     /// <summary>
+    /// 更新全部比赛题目解出数量
+    /// </summary>
+    /// <remarks>
+    /// 更新全部比赛题目解出数量，需要管理员权限
+    /// </remarks>
+    /// <param name="id">比赛Id</param>
+    /// <param name="token"></param>
+    /// <response code="200">成功获取比赛题目</response>
+    [HttpPost("Games/{id:int}/Challenges/UpdateAccepted")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateGameChallengesAcceptedCount([FromRoute] int id, CancellationToken token)
+    {
+        Game? game = await gameRepository.GetGameById(id, token);
+
+        if (game is null)
+            return NotFound(new RequestResponse(localizer[nameof(Resources.Program.Game_NotFound)],
+                StatusCodes.Status404NotFound));
+
+        if (await challengeRepository.RecalculateAcceptedCount(game, token))
+            return Ok();
+
+        return BadRequest();
+    }
+
+
+    /// <summary>
     /// 获取比赛题目
     /// </summary>
     /// <remarks>
@@ -541,8 +567,8 @@ public class EditController(
             return NotFound(new RequestResponse(localizer[nameof(Resources.Program.Challenge_NotFound)],
                 StatusCodes.Status404NotFound));
 
-        // NOTE: IsEnabled can only be updated outside of the edit page
-        if (model.IsEnabled == true && !res.Flags.Any() && res.Type != ChallengeType.DynamicContainer)
+        // NOTE: IsEnabled can only be updated outside the edit page
+        if (model.IsEnabled == true && res.Flags.Count == 0 && res.Type != ChallengeType.DynamicContainer)
             return BadRequest(new RequestResponse(localizer[nameof(Resources.Program.Challenge_NoFlag)]));
 
         if (model.EnableTrafficCapture is true && !res.Type.IsContainer())
@@ -567,26 +593,19 @@ public class EditController(
 
             if (game.IsActive)
                 await gameNoticeRepository.AddNotice(
-                    new()
-                    {
-                        Game = game,
-                        Type = NoticeType.NewChallenge,
-                        Values = [res.Title]
-                    }, token);
+                    new() { Game = game, Type = NoticeType.NewChallenge, Values = [res.Title] }, token);
         }
         else
         {
+            if (!res.Type.IsContainer())
+                await instanceRepository.DestroyAllInstances(res, token);
+
             await challengeRepository.SaveAsync(token);
         }
 
         if (game.IsActive && res.IsEnabled && hintUpdated)
             await gameNoticeRepository.AddNotice(
-                new()
-                {
-                    Game = game,
-                    Type = NoticeType.NewHint,
-                    Values = [res.Title]
-                },
+                new() { Game = game, Type = NoticeType.NewHint, Values = [res.Title] },
                 token);
 
         // always flush scoreboard

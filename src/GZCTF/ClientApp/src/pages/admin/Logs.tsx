@@ -1,7 +1,6 @@
 import {
   ActionIcon,
   Badge,
-  createStyles,
   Group,
   Input,
   Paper,
@@ -10,6 +9,7 @@ import {
   Table,
   Text,
 } from '@mantine/core'
+import { createStyles } from '@mantine/emotion'
 import { showNotification } from '@mantine/notifications'
 import { mdiArrowLeftBold, mdiArrowRightBold, mdiCheck, mdiClose } from '@mdi/js'
 import { Icon } from '@mdi/react'
@@ -56,6 +56,11 @@ const Logs: FC = () => {
   const [logs, setLogs] = useState<LogMessageModel[]>()
 
   const { t } = useTranslation()
+  const viewport = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    viewport.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [activePage, level, viewport])
 
   useEffect(() => {
     api.admin
@@ -79,6 +84,10 @@ const Logs: FC = () => {
       newLogs.current = []
     }
   }, [activePage, level])
+
+  useEffect(() => {
+    setPage(1)
+  }, [level])
 
   useEffect(() => {
     const connection = new signalR.HubConnectionBuilder()
@@ -116,49 +125,47 @@ const Logs: FC = () => {
     }
   }, [])
 
-  const rows = [...(activePage === 1 ? newLogs.current : []), ...(logs ?? [])].map((item, i) => (
-    <tr
-      key={`${item.time}@${i}`}
-      className={
-        i === 0 && activePage === 1 && newLogs.current.length > 0 ? cx(classes.fade) : undefined
-      }
-    >
-      <td className={cx(classes.mono)}>
-        <Badge size="sm" color="indigo">
-          {dayjs(item.time).format('MM/DD HH:mm:ss')}
-        </Badge>
-      </td>
-      <td className={cx(classes.mono)}>
-        <Text ff={theme.fontFamilyMonospace} size="sm" fw={300}>
-          {item.ip || 'localhost'}
-        </Text>
-      </td>
-      <td className={cx(classes.mono)}>
-        <Text ff={theme.fontFamilyMonospace} size="sm" fw="bold" lineClamp={1}>
-          {item.name}
-        </Text>
-      </td>
-      <td>
-        <Input
-          variant="unstyled"
-          value={item.msg || ''}
-          readOnly
-          size="sm"
-          sx={() => ({
-            input: {
-              userSelect: 'none',
-              lineHeight: 1,
-            },
-          })}
-        />
-      </td>
-      <td className={cx(classes.mono)}>
-        <Badge size="sm" color={TaskStatusColorMap.get(item.status as TaskStatus) ?? 'gray'}>
-          {item.status}
-        </Badge>
-      </td>
-    </tr>
-  ))
+  const rows = [...(activePage === 1 ? newLogs.current : []), ...(logs ?? [])]
+    .filter((item) => level === 'All' || item.level === level)
+    .map((item, i) => (
+      <Table.Tr
+        key={`${item.time}@${i}`}
+        className={
+          i === 0 &&
+          activePage === 1 &&
+          newLogs.current.length > 0 &&
+          newLogs.current[0].level === level
+            ? cx(classes.fade)
+            : undefined
+        }
+      >
+        <Table.Td className={cx(classes.mono)}>
+          <Badge size="sm" color="indigo">
+            {dayjs(item.time).format('MM/DD HH:mm:ss')}
+          </Badge>
+        </Table.Td>
+        <Table.Td className={cx(classes.mono)}>
+          <Text ff="monospace" size="sm" fw={300}>
+            {item.ip || 'localhost'}
+          </Text>
+        </Table.Td>
+        <Table.Td className={cx(classes.mono)}>
+          <Text ff="monospace" size="sm" fw="bold" lineClamp={1}>
+            {item.name}
+          </Text>
+        </Table.Td>
+        <Table.Td>
+          <Input variant="unstyled" value={item.msg || ''} readOnly size="sm" />
+        </Table.Td>
+        <Table.Td className={cx(classes.mono)}>
+          {item.status && (
+            <Badge size="sm" color={TaskStatusColorMap.get(item.status as TaskStatus) ?? 'gray'}>
+              {item.status}
+            </Badge>
+          )}
+        </Table.Td>
+      </Table.Tr>
+    ))
 
   return (
     <AdminPage
@@ -166,20 +173,20 @@ const Logs: FC = () => {
       head={
         <>
           <SegmentedControl
-            color="brand"
+            color={theme.primaryColor}
             value={level}
             styles={{
               root: {
                 background: 'transparent',
               },
             }}
-            onChange={(value: LogLevel) => setLevel(value)}
+            onChange={(value) => setLevel(value as LogLevel)}
             data={Object.entries(LogLevel).map((role) => ({
               value: role[1],
               label: role[0],
             }))}
           />
-          <Group position="right">
+          <Group justify="right">
             <ActionIcon
               size="lg"
               disabled={activePage <= 1}
@@ -202,18 +209,23 @@ const Logs: FC = () => {
       }
     >
       <Paper shadow="md" p="md" w="100%">
-        <ScrollArea offsetScrollbars scrollbarSize={4} h="calc(100vh - 190px)">
+        <ScrollArea
+          viewportRef={viewport}
+          offsetScrollbars
+          scrollbarSize={4}
+          h="calc(100vh - 190px)"
+        >
           <Table className={cx(classes.table, noPaddingClasses.table)}>
-            <thead>
-              <tr>
-                <th style={{ width: '8rem' }}>{t('common.label.time')}</th>
-                <th style={{ width: '10rem' }}>{t('common.label.ip')}</th>
-                <th style={{ width: '6rem' }}>{t('common.label.user')}</th>
-                <th>{t('admin.label.logs.message')}</th>
-                <th style={{ width: '3rem' }}>{t('admin.label.logs.status')}</th>
-              </tr>
-            </thead>
-            <tbody>{rows}</tbody>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th style={{ width: '8rem' }}>{t('common.label.time')}</Table.Th>
+                <Table.Th style={{ width: '10rem' }}>{t('common.label.ip')}</Table.Th>
+                <Table.Th style={{ width: '6rem' }}>{t('common.label.user')}</Table.Th>
+                <Table.Th>{t('admin.label.logs.message')}</Table.Th>
+                <Table.Th style={{ width: '3rem' }}>{t('admin.label.logs.status')}</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>{rows}</Table.Tbody>
           </Table>
         </ScrollArea>
       </Paper>

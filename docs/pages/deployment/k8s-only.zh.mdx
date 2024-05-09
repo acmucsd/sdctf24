@@ -6,7 +6,7 @@ import { Callout } from "nextra-theme-docs";
 
 本篇指南仅适用于**接触过 K8s** 的用户。此篇文章**不会介绍**如何搭建 K8s 集群，也不会含有如何使用 `kubectl` 等命令的教程，同时文中可能出现一些 K8s 的专业术语，需要一定的基础进行阅读。
 
-本文将着重介绍如何在 K8s 集群中部署 GZCTF，GZCTF 自身的配置教程请参考 [快速上手](/quick-start)。
+本文将着重介绍如何在 K8s 集群中部署 GZCTF，GZCTF 自身的配置教程请参考 [快速上手](/zh/quick-start)。
 
 </Callout>
 
@@ -143,6 +143,9 @@ import { Callout } from "nextra-theme-docs";
              env:
                - name: GZCTF_ADMIN_PASSWORD
                  value: xxx # 管理员密码
+               # choose your backend language `en_US` / `zh_CN` / `ja_JP`
+               - name: LC_ALL
+                 value: zh_CN.UTF-8
              ports:
                - containerPort: 8080
                  name: http
@@ -155,9 +158,6 @@ import { Callout } from "nextra-theme-docs";
                - name: gzctf-kube-config
                  mountPath: /app/kube-config.yaml
                  subPath: kube-config
-               # 若需要持久化存储日志 .log 文件
-               # 请为每个 GZCTF 实例额外挂载一个卷至 /app/log
-               # GZCTF 会自动处理日志文件，并会自动 rotate 和 compress
              resources:
                requests:
                  cpu: 1000m
@@ -261,8 +261,8 @@ import { Callout } from "nextra-theme-docs";
        app: gzctf
      ports:
        - protocol: TCP
-         port: 80
-         targetPort: 80
+         port: 8080
+         targetPort: 8080
    ---
    apiVersion: v1
    kind: Service
@@ -314,7 +314,7 @@ import { Callout } from "nextra-theme-docs";
                  service:
                    name: gzctf
                    port:
-                     number: 80
+                     number: 8080
    ```
 
 5. Traefik 的额外配置

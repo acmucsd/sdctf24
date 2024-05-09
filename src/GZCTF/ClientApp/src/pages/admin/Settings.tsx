@@ -1,4 +1,14 @@
-import { Button, Divider, Grid, SimpleGrid, Stack, Switch, TextInput, Title } from '@mantine/core'
+import {
+  Button,
+  Divider,
+  Grid,
+  NumberInput,
+  SimpleGrid,
+  Stack,
+  Switch,
+  TextInput,
+  Title,
+} from '@mantine/core'
 import { mdiCheck, mdiContentSaveOutline } from '@mdi/js'
 import { Icon } from '@mdi/react'
 import { FC, useEffect, useState } from 'react'
@@ -56,7 +66,7 @@ const Configs: FC = () => {
         variant="filled"
         radius="xl"
         size="md"
-        leftIcon={<Icon path={saved ? mdiContentSaveOutline : mdiCheck} size={1} />}
+        leftSection={<Icon path={saved ? mdiContentSaveOutline : mdiCheck} size={1} />}
         onClick={() => {
           updateConfig({ globalConfig, accountPolicy, containerPolicy })
           setSaved(false)
@@ -66,7 +76,7 @@ const Configs: FC = () => {
       >
         {t('admin.button.save')}
       </Button>
-      <Stack w="100%" spacing="xl">
+      <Stack w="100%" gap="xl">
         <Stack>
           <Title order={2}>{t('admin.content.settings.platform.title')}</Title>
           <Divider />
@@ -178,17 +188,61 @@ const Configs: FC = () => {
             }}
           />
         </Stack>
-
         <Stack>
-          <Title order={2}>{t('admin.content.settings.game.title')}</Title>
+          <Title order={2}>{t('admin.content.settings.container.title')}</Title>
           <Divider />
-          <SimpleGrid cols={2}>
+          <SimpleGrid cols={4} style={{ alignItems: 'center' }}>
+            <NumberInput
+              label={t('admin.content.settings.container.default_lifetime.label')}
+              description={t('admin.content.settings.container.default_lifetime.description')}
+              placeholder="120"
+              min={1}
+              max={7200}
+              disabled={disabled}
+              value={containerPolicy?.defaultLifetime ?? 120}
+              onChange={(e) => {
+                if (typeof e === 'string') return
+
+                const num = e ? Math.min(Math.max(e, 1), 7200) : 120
+                setContainerPolicy({ ...(containerPolicy ?? {}), defaultLifetime: num })
+              }}
+            />
+            <NumberInput
+              label={t('admin.content.settings.container.extension_duration.label')}
+              description={t('admin.content.settings.container.extension_duration.description')}
+              placeholder="120"
+              min={1}
+              max={7200}
+              disabled={disabled}
+              value={containerPolicy?.extensionDuration ?? 120}
+              onChange={(e) => {
+                if (typeof e === 'string') return
+
+                const num = e ? Math.min(Math.max(e, 1), 7200) : 120
+                setContainerPolicy({ ...(containerPolicy ?? {}), extensionDuration: num })
+              }}
+            />
+            <NumberInput
+              label={t('admin.content.settings.container.renewal_window.label')}
+              description={t('admin.content.settings.container.renewal_window.description')}
+              placeholder="10"
+              min={1}
+              max={360}
+              disabled={disabled}
+              value={containerPolicy?.renewalWindow ?? 10}
+              onChange={(e) => {
+                if (typeof e === 'string') return
+
+                const num = e ? Math.min(Math.max(e, 1), 360) : 10
+                setContainerPolicy({ ...(containerPolicy ?? {}), renewalWindow: num })
+              }}
+            />
             <Switch
               checked={containerPolicy?.autoDestroyOnLimitReached ?? true}
               disabled={disabled}
               label={SwitchLabel(
-                t('admin.content.settings.game.auto_destroy.label'),
-                t('admin.content.settings.game.auto_destroy.description')
+                t('admin.content.settings.container.auto_destroy.label'),
+                t('admin.content.settings.container.auto_destroy.description')
               )}
               onChange={(e) =>
                 setContainerPolicy({

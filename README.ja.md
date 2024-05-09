@@ -61,19 +61,24 @@ GZ::CTF は ASP.NET Core を基づいたオープンソース CTF プラット�
 - チャレンジに対するトラフィック **TCP over WebSocket プロキシ転送**、トラフィック キャプチャの設定ができます
 - Redis ベースのクラスター キャッシュ、PGSQL をデータベースとして使用
 - グローバル設定でプラットフォームタイトルと他の情報を設定可能
+- マトリクスと分散トレーシングのサポート
 - その他...
 
 ## Demo 🗿
 
-![](assets/demo-1.png)
-![](assets/demo-2.png)
-![](assets/demo-3.png)
-![](assets/demo-4.png)
-![](assets/demo-5.png)
-![](assets/demo-6.png)
-![](assets/demo-7.png)
-![](assets/demo-8.png)
-![](assets/demo-9.png)
+![index.png](docs/public/images/index.png)
+![game.challenges.png](docs/public/images/game.challenges.png)
+![game.scoreboard.png](docs/public/images/game.scoreboard.png)
+![admin.settings.png](docs/public/images/admin.settings.png)
+![admin.challenges.png](docs/public/images/admin.challenges.png)
+![admin.challenge.info.png](docs/public/images/admin.challenge.info.png)
+![admin.challenge.flags.png](docs/public/images/admin.challenge.flags.png)
+![admin.game.info.png](docs/public/images/admin.game.info.png)
+![admin.game.review.png](docs/public/images/admin.game.review.png)
+![admin.teams.png](docs/public/images/admin.teams.png)
+![admin.instances.png](docs/public/images/admin.instances.png)
+![monitor.game.events.png](docs/public/images/monitor.game.events.png)
+![monitor.game.submissions.png](docs/public/images/monitor.game.submissions.png)
 
 ## i18n について 🌐
 
@@ -109,6 +114,7 @@ GZ::CTF は ASP.NET Core を基づいたオープンソース CTF プラット�
 - **南陽師範学院新人戦 NYNUCTF S4**
 - **商丘師範学院初回ネットワークセキュリティ新人戦**
 - **蘇州市職業大学 2023 年冬季新人戦 [SVUCTF-WINTER-2023](https://github.com/SVUCTF/SVUCTF-WINTER-2023)**
+- **北京航空航天大学 BUAACTF 2024**
 
 _順番は順位との関係はありません。追加ための PR は大歓迎。_
 
@@ -118,4 +124,4 @@ THUCTF 2022 の主催者である NanoApe によるスポンサーシップと�
 
 ## Stars ✨
 
-[![Stargazers over time](https://starchart.cc/GZTimeWalker/GZCTF.svg)](https://starchart.cc/GZTimeWalker/GZCTF)
+[![Stargazers over time](https://starchart.cc/GZTimeWalker/GZCTF.svg?variant=adaptive)](https://starchart.cc/GZTimeWalker/GZCTF)

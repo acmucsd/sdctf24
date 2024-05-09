@@ -20,7 +20,8 @@ public class SwarmManager : IContainerManager
         _meta = provider.GetMetadata();
         _client = provider.GetProvider();
 
-        logger.SystemLog(Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_SwarmMode)], TaskStatus.Success,
+        logger.SystemLog(Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_SwarmMode)],
+            TaskStatus.Success,
             LogLevel.Debug);
     }
 
@@ -33,7 +34,8 @@ public class SwarmManager : IContainerManager
         catch (DockerContainerNotFoundException)
         {
             _logger.SystemLog(
-                Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_ContainerDestroyed), container.ContainerId],
+                Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_ContainerDestroyed),
+                    container.ContainerId],
                 TaskStatus.Success, LogLevel.Debug);
         }
         catch (DockerApiException e)
@@ -41,7 +43,8 @@ public class SwarmManager : IContainerManager
             if (e.StatusCode == HttpStatusCode.NotFound)
             {
                 _logger.SystemLog(
-                    Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_ContainerDestroyed), container.ContainerId],
+                    Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_ContainerDestroyed),
+                        container.ContainerId],
                     TaskStatus.Success, LogLevel.Debug);
             }
             else
@@ -60,7 +63,8 @@ public class SwarmManager : IContainerManager
         catch (Exception e)
         {
             _logger.LogError(e,
-                Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_ContainerDeletionFailed), container.ContainerId]);
+                Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_ContainerDeletionFailed),
+                    container.ContainerId]);
             return;
         }
 
@@ -83,7 +87,8 @@ public class SwarmManager : IContainerManager
             if (e.StatusCode == HttpStatusCode.Conflict && retry < 3)
             {
                 _logger.SystemLog(
-                    Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_ContainerExisted), parameters.Service.Name],
+                    Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_ContainerExisted),
+                        parameters.Service.Name],
                     TaskStatus.Duplicate,
                     LogLevel.Warning);
                 await _client.Swarm.RemoveServiceAsync(parameters.Service.Name, token);
@@ -139,12 +144,12 @@ public class SwarmManager : IContainerManager
         container.Port = (int)res.Endpoint.Ports.First().PublishedPort;
         container.IsProxy = !_meta.ExposePort;
 
-        if (_meta.ExposePort)
-        {
-            container.PublicPort = container.Port;
-            if (!string.IsNullOrEmpty(_meta.PublicEntry))
-                container.PublicIP = _meta.PublicEntry;
-        }
+        if (!_meta.ExposePort)
+            return container;
+
+        container.PublicPort = container.Port;
+        if (!string.IsNullOrEmpty(_meta.PublicEntry))
+            container.PublicIP = _meta.PublicEntry;
 
         return container;
     }

@@ -29,9 +29,9 @@ public class KubernetesMetadata : ContainerProviderMetadata
 public class KubernetesProvider : IContainerProvider<Kubernetes, KubernetesMetadata>
 {
     const string NetworkPolicy = "gzctf-policy";
-    readonly KubernetesMetadata _kubernetesMetadata;
 
     readonly Kubernetes _kubernetesClient;
+    readonly KubernetesMetadata _kubernetesMetadata;
 
     public KubernetesProvider(IOptions<RegistryConfig> registry, IOptions<ContainerProvider> options,
         ILogger<KubernetesProvider> logger)
@@ -96,6 +96,7 @@ public class KubernetesProvider : IContainerProvider<Kubernetes, KubernetesMetad
             _kubernetesClient.CoreV1.CreateNamespace(
                 new() { Metadata = new() { Name = _kubernetesMetadata.Config.Namespace } });
 
+        // skip if policy exists, which can be configured by admin outside GZCTF
         if (_kubernetesClient.NetworkingV1.ListNamespacedNetworkPolicy(_kubernetesMetadata.Config.Namespace).Items
             .All(np => np.Metadata.Name != NetworkPolicy))
             _kubernetesClient.NetworkingV1.CreateNamespacedNetworkPolicy(new()
@@ -116,7 +117,7 @@ public class KubernetesProvider : IContainerProvider<Kubernetes, KubernetesMetad
                                     IpBlock = new()
                                     {
                                         Cidr = "0.0.0.0/0",
-                                        Except = _kubernetesMetadata.Config.AllowCidr
+                                        Except = _kubernetesMetadata.Config.AllowCidr ?? ["10.0.0.0/8"]
                                     }
                                 }
                             ]

@@ -26,6 +26,7 @@ public class AccountController(
     IHostEnvironment environment,
     ICaptchaExtension captcha,
     IOptionsSnapshot<AccountPolicy> accountPolicy,
+    IOptionsSnapshot<GlobalConfig> globalConfig,
     UserManager<UserInfo> userManager,
     SignInManager<UserInfo> signInManager,
     ILogger<AccountController> logger,
@@ -110,7 +111,7 @@ public class AccountController(
         }
         else
         {
-            if (!mailSender.SendConfirmEmailUrl(user.UserName, user.Email, link))
+            if (!mailSender.SendConfirmEmailUrl(user.UserName, user.Email, link, localizer, globalConfig))
                 return BadRequest(new RequestResponse(localizer[nameof(Resources.Program.Account_EmailSendFailed)]));
         }
 
@@ -174,7 +175,7 @@ public class AccountController(
         }
         else
         {
-            if (!mailSender.SendResetPasswordUrl(user.UserName, user.Email, link))
+            if (!mailSender.SendResetPasswordUrl(user.UserName, user.Email, link, localizer, globalConfig))
                 return BadRequest(new RequestResponse(localizer[nameof(Resources.Program.Account_EmailSendFailed)]));
         }
 
@@ -345,17 +346,17 @@ public class AccountController(
         {
             var oldName = user.UserName;
 
-            var unameRes = await userManager.SetUserNameAsync(user, model.UserName);
+            IdentityResult unameRes = await userManager.SetUserNameAsync(user, model.UserName);
 
             if (!unameRes.Succeeded)
                 return HandleIdentityError(unameRes.Errors);
 
             logger.Log(Program.StaticLocalizer[nameof(Resources.Program.Account_UserUpdated), oldName!, user.UserName!],
-                    user, TaskStatus.Success);
+                user, TaskStatus.Success);
         }
 
         user!.UpdateUserInfo(model);
-        var result = await userManager.UpdateAsync(user);
+        IdentityResult result = await userManager.UpdateAsync(user);
 
         if (!result.Succeeded)
             return HandleIdentityError(result.Errors);
@@ -434,7 +435,7 @@ public class AccountController(
         }
         else
         {
-            if (!mailSender.SendChangeEmailUrl(user!.UserName, model.NewMail, link))
+            if (!mailSender.SendChangeEmailUrl(user!.UserName, model.NewMail, link, localizer, globalConfig))
                 return BadRequest(new RequestResponse(localizer[nameof(Resources.Program.Account_EmailSendFailed)]));
         }
 
@@ -542,5 +543,5 @@ public class AccountController(
 
     BadRequestObjectResult HandleIdentityError(IEnumerable<IdentityError> errors) =>
         BadRequest(new RequestResponse(errors.FirstOrDefault()?.Description ??
-                                                  localizer[nameof(Resources.Program.Identity_UnknownError)]));
+                                       localizer[nameof(Resources.Program.Identity_UnknownError)]));
 }

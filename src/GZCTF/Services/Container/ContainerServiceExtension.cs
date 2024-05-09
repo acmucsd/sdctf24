@@ -28,7 +28,7 @@ public class ContainerProviderMetadata
 public static class ContainerServiceExtension
 {
     internal static IServiceCollection AddContainerService(this IServiceCollection services,
-        ConfigurationManager configuration)
+        IConfiguration configuration)
     {
         ContainerProvider config = configuration.GetSection(nameof(ContainerProvider)).Get<ContainerProvider>() ??
                                    new();
@@ -44,7 +44,7 @@ public static class ContainerServiceExtension
                 .AddSingleton<IContainerProvider<DockerClient, DockerMetadata>, DockerProvider>(),
             ContainerProviderType.Kubernetes => services
                 .AddSingleton<IContainerProvider<Kubernetes, KubernetesMetadata>, KubernetesProvider>(),
-            _ => throw new NotImplementedException()
+            _ => services
         };
 
     static IServiceCollection AddManager(this IServiceCollection services, ContainerProvider config)

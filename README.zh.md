@@ -61,19 +61,24 @@ GZ::CTF 是一个基于 ASP.NET Core 的开源 CTF 平台。
 - 题目流量 **TCP over WebSocket 代理转发**、可配置流量捕获
 - 基于 Redis 的集群缓存、基于 PGSQL 的数据库存储后端
 - 全局配置项自定义、平台标题、备案信息
+- 支持测量和分布式追踪
 - 以及更多……
 
 ## Demo 🗿
 
-![](assets/demo-1.png)
-![](assets/demo-2.png)
-![](assets/demo-3.png)
-![](assets/demo-4.png)
-![](assets/demo-5.png)
-![](assets/demo-6.png)
-![](assets/demo-7.png)
-![](assets/demo-8.png)
-![](assets/demo-9.png)
+![index.png](docs/public/images/index.png)
+![game.challenges.png](docs/public/images/game.challenges.png)
+![game.scoreboard.png](docs/public/images/game.scoreboard.png)
+![admin.settings.png](docs/public/images/admin.settings.png)
+![admin.challenges.png](docs/public/images/admin.challenges.png)
+![admin.challenge.info.png](docs/public/images/admin.challenge.info.png)
+![admin.challenge.flags.png](docs/public/images/admin.challenge.flags.png)
+![admin.game.info.png](docs/public/images/admin.game.info.png)
+![admin.game.review.png](docs/public/images/admin.game.review.png)
+![admin.teams.png](docs/public/images/admin.teams.png)
+![admin.instances.png](docs/public/images/admin.instances.png)
+![monitor.game.events.png](docs/public/images/monitor.game.events.png)
+![monitor.game.submissions.png](docs/public/images/monitor.game.submissions.png)
 
 ## 关于 i18n 🌐
 
@@ -109,6 +114,8 @@ GZ::CTF 是一个基于 ASP.NET Core 的开源 CTF 平台。
 - **南阳师范学院招新赛 NYNUCTF S4**
 - **商丘师范学院首届网络安全新生挑战赛**
 - **苏州市职业大学 2023 年冬季新生赛 [SVUCTF-WINTER-2023](https://github.com/SVUCTF/SVUCTF-WINTER-2023)**
+- **北京经济管理职业学院 首届BIEM“信安杯”CTF竞赛**
+- **北京航空航天大学 BUAACTF 2024**
 
 _排名不分先后，欢迎提交 PR 进行补充。_
 
@@ -118,4 +125,4 @@ _排名不分先后，欢迎提交 PR 进行补充。_
 
 ## Stars ✨
 
-[![Stargazers over time](https://starchart.cc/GZTimeWalker/GZCTF.svg)](https://starchart.cc/GZTimeWalker/GZCTF)
+[![Stargazers over time](https://starchart.cc/GZTimeWalker/GZCTF.svg?variant=adaptive)](https://starchart.cc/GZTimeWalker/GZCTF)

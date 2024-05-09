@@ -27,6 +27,43 @@ import { Callout } from "nextra-theme-docs";
       "Default": "Information",
       "Microsoft": "Warning",
       "Microsoft.Hosting.Lifetime": "Information"
+    },
+    "Loki": {
+      "Enable": true,
+      "EndpointUri": "http://loki:3100",
+      "Labels": [
+        {
+          "Key": "app",
+          "Value": "gzctf"
+        }
+      ],
+      "PropertiesAsLabels": [ "app" ],
+      "Credentials": {
+        "Login": "login",
+        "Password": "password"
+      },
+      "Tenant": "my-tenant",
+      "MinimumLevel": "Trace"
+    }
+  },
+  "Telemetry": {
+    "Enable": false,
+    "Prometheus": {
+      "Enable": false,
+      "Port": 3000,
+      "TotalNameSuffixForCounters": false
+    },
+    "OpenTelemetry": {
+      "Enable": false,
+      "Protocol": "Grpc",
+      "EndpointUri": "http://jaeger-collector:4317"
+    },
+    "AzureMonitor": {
+      "Enable": false,
+      "ConnectionString": "InstrumentationKey=12345678-abcd-abcd-abcd-12345678..."
+    },
+    "Console": {
+      "Enable": false
     }
   },
   "EmailConfig": {
@@ -90,6 +127,14 @@ import { Callout } from "nextra-theme-docs";
     "TrustedProxies": ["10.0.0.1"]
   },
   "Kestrel": {
+    "Endpoints": {
+      "Web": {
+        "Url": "http://*:8080"
+      },
+      "Prometheus": {
+        "Url": "http://*:3000"
+      }
+    },
     "Limits": {
       "MaxResponseBufferSize": 2048,
       "MaxRequestBufferSize": 1048576,
@@ -125,6 +170,50 @@ GZCTFはPostgreSQLをバックエンドデータベースおよびデータ永�
 GZCTFはデータベースとしてPostgreSQLのみをサポートしており、MySQLなどの他のデータベースはサポートしていません。設定ファイルに正しいデータベース接続文字列を記入してください。
 
 </Callout>
+
+### Logging
+
+ロギングレベルとスコープを設定することができます。さらに、GZCTF は Loki サーバーへのログ送信もサポートしています。
+
+- **LogLevel**: 名前空間ごとの最小ロギングレベル。
+- **Loki**: Lokiサーバーの設定。
+
+  - **Enable**: 有効にするかどうか。
+  - **EndpointUri**: Loki サーバーの URI。
+  - **Labels**: 任意。グローバルログイベントラベル。
+  - **PropertiesAsLabels**: 任意。Loki のラベルにマップするべきプロパティのリスト。
+  - **Credentials**: 任意。基本認証に使用される資格情報。
+  - **Tenant**: 任意。Loki サーバーへのログ送信に使用されるテナント ID。
+  - **MinimumLevel**: 任意。最小ロギングレベル。
+
+利用可能なロギングレベル: Trace, Debug, Information, Warning, Error, Critical, None。
+
+### Telemetry
+
+GZCTFはメトリクスと分散トレーシングをサポートしています。使用するプロバイダーを設定できます。
+
+- **Enable**: テレメトリーを有効化するかどうか。
+
+- **Prometheus**: Prometheus エンドポイント。
+
+  - **Enable**: 有効にするかどうか。
+  - **Port**: 任意。Prometheus の  `/metrics` エンドポイントがリッスンするポート。これが設定されている場合、サーバーが指定されたポートを正常にリッスンするようにするには、`Kestrel.Endpoints` を手動で追加設定する必要があります。
+  - **TotalNameSuffixForCounters**: 任意。カウンタに `_total` サフィックスを含めるかどうか。
+
+- **OpenTelemetry**: メトリクスとトレーシングデータを OpenTelemetry にエクスポートします。
+
+  - **Enable**: 有効にするかどうか。
+  - **Protocol**: `Grpc` または `HttpProtobuf`。
+  - **EndpointUri**: テレメトリーデーターがプッシュされる OpenTelemetry エンドポイント URI。
+
+- **AzureMonitor**: メトリクスとトレーシングデータを ApplicationInsights にエクスポートします。
+
+  - **Enable**: 有効にするかどうか。
+  - **ConnectionString**: 接続文字列。
+
+- **Console**: トレーシングデータをコンソールにエクスポートします。
+
+  - **Enable**: 有効にするかどうか。
 
 ### EmailConfig
 
@@ -183,6 +272,12 @@ GZCTFはデータベースとしてPostgreSQLのみをサポートしており�
 <Callout type="info">
 
 `kube-config.yaml`ファイルの`server`フィールドを変更し、クラスタのAPI Serverアドレスを指定することに注意してください。クラスタのデフォルトアドレスは通常`https://127.0.0.1:6443`で、クラスタの実際のアドレスに変更する必要があります。
+
+</Callout>
+
+<Callout type="info" emoji="👾">
+
+ネットワークポリシーを満たすために、GZCTFはチャレンジのNamespaceに`gzctf-policy`という名前のNetworkPolicyを作成してアクセスを制限します。GZCTFはこのNetworkPolicyが既に存在するかどうかを自動的に検出し、存在する場合は再作成しません。そのため、ネットワークポリシーをカスタマイズするには、このNetworkPolicyを作成または編集してください。
 
 </Callout>
 
@@ -245,4 +340,5 @@ Google Recaptcha v3の関連情報を設定します。オプションです。
 
 KestrelはGZCTFが内蔵して使用しているWebサーバーです。この設定を利用すると、HTTPプロトコルを指定したり、リクエストのサイズ上限を変更したりと、Kestrelの動作を自由に制御することができます。
 
-具体的な設定フィールドについては、公式ドキュメントの`KestrelServerOptions`クラスの属性を参照してください：[KestrelServerOptions クラス](https://learn.microsoft.com/ja-jp/dotnet/api/microsoft.aspnetcore.server.kestrel.core.kestrelserveroptions)。
+- **Endpoints**: Web サーバーがリッスンする URL。環境変数または起動パラメータを通じて設定することもできます。詳細については、[ASP.NET Core Kestrel Web サーバーのエンドポイントを構成する] (https://learn.microsoft.com/ja-jp/aspnet/core/fundamentals/servers/kestrel/endpoints) を参照してください。
+- 他の設定フィールドについては、公式ドキュメントの`KestrelServerOptions`クラスの属性を参照してください：[KestrelServerOptions クラス](https://learn.microsoft.com/ja-jp/dotnet/api/microsoft.aspnetcore.server.kestrel.core.kestrelserveroptions)。

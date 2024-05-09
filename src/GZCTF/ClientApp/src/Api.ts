@@ -50,7 +50,7 @@ export type RegisterModel = ModelWithCaptcha & {
   userName: string;
   /**
    * 密码
-   * @minLength 6
+   * @minLength 1
    */
   password: string;
   /**
@@ -80,7 +80,7 @@ export type RecoveryModel = ModelWithCaptcha & {
 export interface PasswordResetModel {
   /**
    * 密码
-   * @minLength 6
+   * @minLength 1
    */
   password: string;
   /**
@@ -118,7 +118,7 @@ export type LoginModel = ModelWithCaptcha & {
   userName: string;
   /**
    * 密码
-   * @minLength 6
+   * @minLength 1
    */
   password: string;
 };
@@ -133,7 +133,7 @@ export interface ProfileUpdateModel {
   userName?: string | null;
   /**
    * 描述
-   * @maxLength 55
+   * @maxLength 128
    */
   bio?: string | null;
   /**
@@ -143,12 +143,12 @@ export interface ProfileUpdateModel {
   phone?: string | null;
   /**
    * 真实姓名
-   * @maxLength 7
+   * @maxLength 128
    */
   realName?: string | null;
   /**
    * 学工号
-   * @maxLength 24
+   * @maxLength 64
    */
   stdNumber?: string | null;
 }
@@ -268,6 +268,27 @@ export interface ContainerPolicy {
    * @format int32
    */
   maxExerciseContainerCountPerUser?: number;
+  /**
+   * 容器的默认生命周期，以分钟计
+   * @format int32
+   * @min 1
+   * @max 7200
+   */
+  defaultLifetime?: number;
+  /**
+   * 容器每次续期的时长，以分钟计
+   * @format int32
+   * @min 1
+   * @max 7200
+   */
+  extensionDuration?: number;
+  /**
+   * 容器停止前的可续期时间段，以分钟计
+   * @format int32
+   * @min 1
+   * @max 360
+   */
+  renewalWindow?: number;
 }
 
 /** 列表响应 */
@@ -335,7 +356,7 @@ export interface UserCreateModel {
   userName: string;
   /**
    * 密码
-   * @minLength 6
+   * @minLength 1
    */
   password: string;
   /**
@@ -346,12 +367,12 @@ export interface UserCreateModel {
   email: string;
   /**
    * 真实姓名
-   * @maxLength 7
+   * @maxLength 128
    */
   realName?: string | null;
   /**
    * 学号
-   * @maxLength 24
+   * @maxLength 64
    */
   stdNumber?: string | null;
   /**
@@ -422,12 +443,12 @@ export interface TeamUserInfoModel {
 export interface AdminTeamModel {
   /**
    * 队伍名称
-   * @maxLength 15
+   * @maxLength 20
    */
   name?: string | null;
   /**
    * 队伍签名
-   * @maxLength 31
+   * @maxLength 72
    */
   bio?: string | null;
   /** 是否锁定 */
@@ -449,7 +470,7 @@ export interface AdminUserInfoModel {
   email?: string | null;
   /**
    * 签名
-   * @maxLength 50
+   * @maxLength 128
    */
   bio?: string | null;
   /**
@@ -459,12 +480,12 @@ export interface AdminUserInfoModel {
   phone?: string | null;
   /**
    * 真实姓名
-   * @maxLength 7
+   * @maxLength 128
    */
   realName?: string | null;
   /**
    * 学工号
-   * @maxLength 24
+   * @maxLength 64
    */
   stdNumber?: string | null;
   /** 用户是否通过邮箱验证（可登录） */
@@ -605,6 +626,7 @@ export enum ChallengeTag {
   Hardware = "Hardware",
   Mobile = "Mobile",
   PPC = "PPC",
+  AI = "AI",
 }
 
 /** 列表响应 */
@@ -649,7 +671,7 @@ export interface ProblemDetails {
 /** 文章对象（Edit） */
 export interface PostEditModel {
   /**
-   * 通知标题
+   * 文章标题
    * @minLength 1
    * @maxLength 50
    */
@@ -659,7 +681,7 @@ export interface PostEditModel {
   /** 文章内容 */
   content?: string;
   /** 文章标签 */
-  tags?: string[];
+  tags?: string[] | null;
   /** 是否置顶 */
   isPinned?: boolean;
 }
@@ -851,7 +873,10 @@ export interface ChallengeEditDetailModel {
   type: ChallengeType;
   /** 题目提示 */
   hints?: string[];
-  /** Flag 模版，用于根据 Token 和题目、比赛信息生成 Flag */
+  /**
+   * Flag 模版，用于根据 Token 和题目、比赛信息生成 Flag
+   * @maxLength 120
+   */
   flagTemplate?: string | null;
   /** 是否启用题目 */
   isEnabled: boolean;
@@ -1099,7 +1124,7 @@ export interface FlagCreateModel {
   /**
    * Flag文本
    * @minLength 1
-   * @maxLength 125
+   * @maxLength 127
    */
   flag: string;
   /** 附件类型 */
@@ -1225,7 +1250,7 @@ export interface ScoreboardModel {
   bloodBonus: number;
   /** 前十名的时间线 */
   timeLines?: Record<string, TopTimeLine[]>;
-  /** 队伍信息 */
+  /** 队伍信息列表 */
   items?: ScoreboardItem[];
   /** 题目信息 */
   challenges?: Record<string, ChallengeInfo[]>;
@@ -1637,7 +1662,7 @@ export interface FlagSubmitModel {
    * flag 内容
    * fix: 防止前端的意外提交 (number/float/null) 可能被错误转换
    * @minLength 1
-   * @maxLength 126
+   * @maxLength 127
    */
   flag: string;
 }
@@ -1690,6 +1715,31 @@ export interface PostInfoModel {
   time: string;
 }
 
+/** 客户端配置 */
+export interface ClientConfig {
+  /** 平台前缀名称 */
+  title?: string;
+  /** 平台标语 */
+  slogan?: string;
+  /** 页脚显示的信息 */
+  footerInfo?: string | null;
+  /**
+   * 容器的默认生命周期，以分钟计
+   * @format int32
+   */
+  defaultLifetime?: number;
+  /**
+   * 容器每次续期的时长，以分钟计
+   * @format int32
+   */
+  extensionDuration?: number;
+  /**
+   * 容器停止前的可续期时间段，以分钟计
+   * @format int32
+   */
+  renewalWindow?: number;
+}
+
 /** 验证码配置 */
 export interface ClientCaptchaInfoModel {
   /** 验证码类型 */
@@ -1708,12 +1758,12 @@ export enum CaptchaProvider {
 export interface TeamUpdateModel {
   /**
    * 队伍名称
-   * @maxLength 15
+   * @maxLength 20
    */
   name?: string | null;
   /**
    * 队伍签名
-   * @maxLength 31
+   * @maxLength 72
    */
   bio?: string | null;
 }
@@ -3389,6 +3439,21 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       }),
 
     /**
+     * @description 更新全部比赛题目解出数量，需要管理员权限
+     *
+     * @tags Edit
+     * @name EditUpdateGameChallengesAcceptedCount
+     * @summary 更新全部比赛题目解出数量
+     * @request POST:/api/edit/games/{id}/challenges/updateaccepted
+     */
+    editUpdateGameChallengesAcceptedCount: (id: number, params: RequestParams = {}) =>
+      this.request<void, RequestResponse>({
+        path: `/api/edit/games/${id}/challenges/updateaccepted`,
+        method: "POST",
+        ...params,
+      }),
+
+    /**
      * @description 更新比赛通知，需要管理员权限
      *
      * @tags Edit
@@ -3544,6 +3609,21 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       }),
 
     /**
+     * @description 删除某队伍的流量包文件，需要Monitor权限
+     *
+     * @tags Game
+     * @name GameDeleteAllTeamTraffic
+     * @summary 删除某队伍的全部流量包文件
+     * @request DELETE:/api/game/captures/{challengeId}/{partId}/all
+     */
+    gameDeleteAllTeamTraffic: (challengeId: number, partId: number, params: RequestParams = {}) =>
+      this.request<void, RequestResponse>({
+        path: `/api/game/captures/${challengeId}/${partId}/all`,
+        method: "DELETE",
+        ...params,
+      }),
+
+    /**
      * @description 删除，需要User权限
      *
      * @tags Game
@@ -3554,6 +3634,21 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     gameDeleteContainer: (id: number, challengeId: number, params: RequestParams = {}) =>
       this.request<void, RequestResponse>({
         path: `/api/game/${id}/container/${challengeId}`,
+        method: "DELETE",
+        ...params,
+      }),
+
+    /**
+     * @description 删除流量包文件，需要Monitor权限
+     *
+     * @tags Game
+     * @name GameDeleteTeamTraffic
+     * @summary 删除流量包文件
+     * @request DELETE:/api/game/captures/{challengeId}/{partId}/{filename}
+     */
+    gameDeleteTeamTraffic: (challengeId: number, partId: number, filename: string, params: RequestParams = {}) =>
+      this.request<void, RequestResponse>({
+        path: `/api/game/captures/${challengeId}/${partId}/${filename}`,
         method: "DELETE",
         ...params,
       }),
@@ -3750,6 +3845,21 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       mutate<BasicGameInfoModel[]>(`/api/game`, data, options),
 
     /**
+     * @description 获取流量包文件，需要Monitor权限
+     *
+     * @tags Game
+     * @name GameGetAllTeamTraffic
+     * @summary 获取流量包文件压缩包
+     * @request GET:/api/game/captures/{challengeId}/{partId}/all
+     */
+    gameGetAllTeamTraffic: (challengeId: number, partId: number, params: RequestParams = {}) =>
+      this.request<void, RequestResponse>({
+        path: `/api/game/captures/${challengeId}/${partId}/all`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
      * @description 获取比赛题目信息，需要User权限，需要当前激活队伍已经报名
      *
      * @tags Game
@@ -3932,21 +4042,6 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       data?: FileRecord[] | Promise<FileRecord[]>,
       options?: MutatorOptions,
     ) => mutate<FileRecord[]>(`/api/game/captures/${challengeId}/${partId}`, data, options),
-
-    /**
-     * @description 获取流量包文件，需要Monitor权限
-     *
-     * @tags Game
-     * @name GameGetTeamTrafficZip
-     * @summary 获取流量包文件压缩包
-     * @request GET:/api/game/captures/{challengeId}/{partId}/all
-     */
-    gameGetTeamTrafficZip: (challengeId: number, partId: number, params: RequestParams = {}) =>
-      this.request<void, RequestResponse>({
-        path: `/api/game/captures/${challengeId}/${partId}/all`,
-        method: "GET",
-        ...params,
-      }),
 
     /**
      * @description 获取赛后题解提交情况，需要User权限
@@ -4433,41 +4528,41 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     ) => mutate<ClientCaptchaInfoModel>(`/api/captcha`, data, options),
 
     /**
-     * @description 获取全局设置
+     * @description 获取客户端设置
      *
      * @tags Info
-     * @name InfoGetGlobalConfig
-     * @summary 获取全局设置
+     * @name InfoGetClientConfig
+     * @summary 获取客户端设置
      * @request GET:/api/config
      */
-    infoGetGlobalConfig: (params: RequestParams = {}) =>
-      this.request<GlobalConfig, any>({
+    infoGetClientConfig: (params: RequestParams = {}) =>
+      this.request<ClientConfig, any>({
         path: `/api/config`,
         method: "GET",
         format: "json",
         ...params,
       }),
     /**
-     * @description 获取全局设置
+     * @description 获取客户端设置
      *
      * @tags Info
-     * @name InfoGetGlobalConfig
-     * @summary 获取全局设置
+     * @name InfoGetClientConfig
+     * @summary 获取客户端设置
      * @request GET:/api/config
      */
-    useInfoGetGlobalConfig: (options?: SWRConfiguration, doFetch: boolean = true) =>
-      useSWR<GlobalConfig, any>(doFetch ? `/api/config` : null, options),
+    useInfoGetClientConfig: (options?: SWRConfiguration, doFetch: boolean = true) =>
+      useSWR<ClientConfig, any>(doFetch ? `/api/config` : null, options),
 
     /**
-     * @description 获取全局设置
+     * @description 获取客户端设置
      *
      * @tags Info
-     * @name InfoGetGlobalConfig
-     * @summary 获取全局设置
+     * @name InfoGetClientConfig
+     * @summary 获取客户端设置
      * @request GET:/api/config
      */
-    mutateInfoGetGlobalConfig: (data?: GlobalConfig | Promise<GlobalConfig>, options?: MutatorOptions) =>
-      mutate<GlobalConfig>(`/api/config`, data, options),
+    mutateInfoGetClientConfig: (data?: ClientConfig | Promise<ClientConfig>, options?: MutatorOptions) =>
+      mutate<ClientConfig>(`/api/config`, data, options),
 
     /**
      * @description 获取最新文章

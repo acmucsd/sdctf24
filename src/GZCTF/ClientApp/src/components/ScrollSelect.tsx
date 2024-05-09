@@ -1,6 +1,6 @@
 import {
   Center,
-  createStyles,
+  ElementProps,
   rem,
   ScrollArea,
   ScrollAreaProps,
@@ -8,9 +8,12 @@ import {
   UnstyledButton,
   UnstyledButtonProps,
 } from '@mantine/core'
+import { createStyles } from '@mantine/emotion'
 import { FC, forwardRef } from 'react'
 
-export interface SelectableItemProps extends UnstyledButtonProps {
+export interface SelectableItemProps
+  extends UnstyledButtonProps,
+    ElementProps<'button', keyof UnstyledButtonProps> {
   onClick: () => void
   active?: boolean
   disabled?: boolean
@@ -21,31 +24,42 @@ export type SelectableItemComponent<I = object> = FC<PropsWithItem<SelectableIte
 
 interface ScrollSelectProps extends ScrollAreaProps {
   itemComponent: React.FC<any>
+  itemComponentProps?: any
   emptyPlaceholder?: React.ReactNode
   items?: any[]
   customClick?: boolean
   selectedId?: number | null
-  onSelectId: (item: any | null) => void
+  onSelect?: (item: any | null) => void
 }
 
-const useItemStyle = createStyles((theme) => ({
+const useItemStyle = createStyles((theme, _, u) => ({
   root: {
     display: 'flex',
     alignItems: 'center',
-    width: '100%',
     padding: `${rem(8)} ${theme.spacing.sm}`,
+    marginTop: '2pt',
     userSelect: 'none',
+    cursor: 'pointer',
+    borderRadius: theme.radius.md,
 
-    ...theme.fn.hover({
-      backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.white[2],
-    }),
+    '&:hover': {
+      [u.dark]: {
+        backgroundColor: theme.colors.dark[6],
+      },
+
+      [u.light]: {
+        backgroundColor: theme.colors.light[2],
+      },
+    },
 
     '&[data-active]': {
-      backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.white[2],
-      ...theme.fn.hover({
-        backgroundColor:
-          theme.colorScheme === 'dark' ? theme.colors.dark[5] : theme.colors.white[3],
-      }),
+      [u.dark]: {
+        backgroundColor: theme.colors.dark[5],
+      },
+
+      [u.light]: {
+        backgroundColor: theme.colors.light[3],
+      },
     },
 
     '&[data-disabled]': {
@@ -76,37 +90,29 @@ export const SelectableItem = forwardRef<HTMLButtonElement, SelectableItemProps>
 const ScrollSelect: FC<ScrollSelectProps> = (props) => {
   const {
     itemComponent: ItemComponent,
+    itemComponentProps,
     emptyPlaceholder,
     items,
     selectedId,
-    onSelectId,
-    customClick,
+    onSelect,
     ...ScrollAreaProps
   } = props
 
   return (
-    <ScrollArea type="auto" {...ScrollAreaProps}>
+    <ScrollArea type="never" {...ScrollAreaProps}>
       {!items || items.length === 0 ? (
         <Center h="100%">{emptyPlaceholder}</Center>
       ) : (
-        <Stack spacing={2} w="100%">
-          {customClick
-            ? items.map((item) => (
-                <ItemComponent
-                  key={item.id}
-                  onClick={() => onSelectId(item)}
-                  active={false}
-                  item={item}
-                />
-              ))
-            : items.map((item) => (
-                <ItemComponent
-                  key={item.id}
-                  onClick={() => onSelectId(item.id)}
-                  active={selectedId === item.id}
-                  item={item}
-                />
-              ))}
+        <Stack gap={2} w="100%">
+          {items.map((item) => (
+            <ItemComponent
+              key={item.id}
+              onClick={onSelect && (() => onSelect(item.id))}
+              active={selectedId && selectedId === item.id}
+              item={item}
+              {...itemComponentProps}
+            />
+          ))}
         </Stack>
       )}
     </ScrollArea>

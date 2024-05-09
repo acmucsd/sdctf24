@@ -11,7 +11,8 @@ public class ChallengeUpdateModel
     /// <summary>
     /// 题目名称
     /// </summary>
-    [MinLength(1, ErrorMessageResourceName = nameof(Resources.Program.Model_TitleTooShort))]
+    [MinLength(1, ErrorMessageResourceName = nameof(Resources.Program.Model_TitleTooShort),
+        ErrorMessageResourceType = typeof(Resources.Program))]
     public string? Title { get; set; }
 
     /// <summary>
@@ -22,7 +23,8 @@ public class ChallengeUpdateModel
     /// <summary>
     /// Flag 模版，用于根据 Token 和题目、比赛信息生成 Flag
     /// </summary>
-    [MaxLength(120, ErrorMessageResourceName = nameof(Resources.Program.Model_FlagTooLong))]
+    [MaxLength(Limits.MaxFlagTemplateLength, ErrorMessageResourceName = nameof(Resources.Program.Model_FlagTooLong),
+        ErrorMessageResourceType = typeof(Resources.Program))]
     public string? FlagTemplate { get; set; }
 
     /// <summary>
@@ -46,31 +48,6 @@ public class ChallengeUpdateModel
     public string? FileName { get; set; }
 
     /// <summary>
-    /// 提示是否存在更新
-    /// </summary>
-    /// <param name="originalHash">原有哈希</param>
-    /// <returns></returns>
-    internal bool IsHintUpdated(int? originalHash) =>
-        Hints is not null && Hints.Count > 0 &&
-        Hints.GetSetHashCode() != originalHash;
-
-    /// <summary>
-    /// 是否为有效的 Flag 模板
-    /// </summary>
-    /// <returns></returns>
-    internal bool IsValidFlagTemplate()
-    {
-        if (string.IsNullOrWhiteSpace(FlagTemplate))
-            return false;
-
-        return FlagTemplate.Contains("[GUID]") ||
-               FlagTemplate.Contains("[TEAM_HASH]") ||
-               Codec.Leet.LeetEntropy(FlagTemplate) >= 32.0;
-    }
-
-    #region Container
-
-    /// <summary>
     /// 镜像名称与标签
     /// </summary>
     public string? ContainerImage { get; set; }
@@ -78,19 +55,22 @@ public class ChallengeUpdateModel
     /// <summary>
     /// 运行内存限制 (MB)
     /// </summary>
-    [Range(32, 1048576, ErrorMessageResourceName = nameof(Resources.Program.Model_OutOfRange))]
+    [Range(32, 1048576, ErrorMessageResourceName = nameof(Resources.Program.Model_OutOfRange),
+        ErrorMessageResourceType = typeof(Resources.Program))]
     public int? MemoryLimit { get; set; }
 
     /// <summary>
     /// CPU 限制 (0.1 CPUs)
     /// </summary>
-    [Range(1, 1024, ErrorMessageResourceName = nameof(Resources.Program.Model_OutOfRange))]
+    [Range(1, 1024, ErrorMessageResourceName = nameof(Resources.Program.Model_OutOfRange),
+        ErrorMessageResourceType = typeof(Resources.Program))]
     public int? CPUCount { get; set; }
 
     /// <summary>
     /// 存储限制 (MB)
     /// </summary>
-    [Range(128, 1048576, ErrorMessageResourceName = nameof(Resources.Program.Model_OutOfRange))]
+    [Range(128, 1048576, ErrorMessageResourceName = nameof(Resources.Program.Model_OutOfRange),
+        ErrorMessageResourceType = typeof(Resources.Program))]
     public int? StorageLimit { get; set; }
 
     /// <summary>
@@ -102,10 +82,6 @@ public class ChallengeUpdateModel
     /// 是否需要记录访问流量
     /// </summary>
     public bool? EnableTrafficCapture { get; set; } = false;
-
-    #endregion Container
-
-    #region Score
 
     /// <summary>
     /// 初始分数
@@ -123,5 +99,25 @@ public class ChallengeUpdateModel
     /// </summary>
     public double? Difficulty { get; set; }
 
-    #endregion Score
+    /// <summary>
+    /// 提示是否存在更新
+    /// </summary>
+    /// <param name="originalHash">原有哈希</param>
+    /// <returns></returns>
+    internal bool IsHintUpdated(int? originalHash) =>
+        Hints is not null && Hints.GetSetHashCode() != originalHash;
+
+    /// <summary>
+    /// 是否为有效的 Flag 模板
+    /// </summary>
+    /// <returns></returns>
+    internal bool IsValidFlagTemplate()
+    {
+        if (string.IsNullOrWhiteSpace(FlagTemplate))
+            return false;
+
+        return FlagTemplate.Contains("[GUID]") ||
+               FlagTemplate.Contains("[TEAM_HASH]") ||
+               Codec.Leet.LeetEntropy(FlagTemplate) >= 32.0;
+    }
 }

@@ -1,7 +1,11 @@
-﻿using System.Net;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Net;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using GZCTF.Extensions;
+using MemoryPack;
+using OpenTelemetry.Exporter;
+using Serilog.Sinks.Grafana.Loki;
 using IPNetwork = Microsoft.AspNetCore.HttpOverrides.IPNetwork;
 
 namespace GZCTF.Models.Internal;
@@ -51,6 +55,27 @@ public class ContainerPolicy
     /// 用户容器数量限制，用于限制练习题目的容器数量
     /// </summary>
     public int MaxExerciseContainerCountPerUser { get; set; } = 1;
+
+    /// <summary>
+    /// 容器的默认生命周期，以分钟计
+    /// </summary>
+    [Range(1, 7200, ErrorMessageResourceName = nameof(Resources.Program.Model_OutOfRange),
+        ErrorMessageResourceType = typeof(Resources.Program))]
+    public int DefaultLifetime { get; set; } = 120;
+
+    /// <summary>
+    /// 容器每次续期的时长，以分钟计
+    /// </summary>
+    [Range(1, 7200, ErrorMessageResourceName = nameof(Resources.Program.Model_OutOfRange),
+        ErrorMessageResourceType = typeof(Resources.Program))]
+    public int ExtensionDuration { get; set; } = 120;
+
+    /// <summary>
+    /// 容器停止前的可续期时间段，以分钟计
+    /// </summary>
+    [Range(1, 360, ErrorMessageResourceName = nameof(Resources.Program.Model_OutOfRange),
+        ErrorMessageResourceType = typeof(Resources.Program))]
+    public int RenewalWindow { get; set; } = 10;
 }
 
 /// <summary>
@@ -58,6 +83,8 @@ public class ContainerPolicy
 /// </summary>
 public class GlobalConfig
 {
+    public const string DefaultEmailTemplate = "default";
+
     /// <summary>
     /// 平台前缀名称
     /// </summary>
@@ -78,8 +105,54 @@ public class GlobalConfig
     /// </summary>
     // TODO: email template validation for MailContent
     public string EmailTemplate { get; set; } = DefaultEmailTemplate;
+}
 
-    public const string DefaultEmailTemplate = "default";
+/// <summary>
+/// 客户端配置
+/// </summary>
+[MemoryPackable]
+public partial class ClientConfig
+{
+    /// <summary>
+    /// 平台前缀名称
+    /// </summary>
+    public string Title { get; set; } = "GZ";
+
+    /// <summary>
+    /// 平台标语
+    /// </summary>
+    public string Slogan { get; set; } = "Hack for fun not for profit";
+
+    /// <summary>
+    /// 页脚显示的信息
+    /// </summary>
+    public string? FooterInfo { get; set; }
+
+    /// <summary>
+    /// 容器的默认生命周期，以分钟计
+    /// </summary>
+    public int DefaultLifetime { get; set; } = 120;
+
+    /// <summary>
+    /// 容器每次续期的时长，以分钟计
+    /// </summary>
+    public int ExtensionDuration { get; set; } = 120;
+
+    /// <summary>
+    /// 容器停止前的可续期时间段，以分钟计
+    /// </summary>
+    public int RenewalWindow { get; set; } = 10;
+
+    public static ClientConfig FromConfigs(GlobalConfig globalConfig, ContainerPolicy containerPolicy) =>
+        new()
+        {
+            Title = globalConfig.Title,
+            Slogan = globalConfig.Slogan,
+            FooterInfo = globalConfig.FooterInfo,
+            DefaultLifetime = containerPolicy.DefaultLifetime,
+            ExtensionDuration = containerPolicy.ExtensionDuration,
+            RenewalWindow = containerPolicy.RenewalWindow
+        };
 }
 
 #region Mail Config
@@ -115,7 +188,7 @@ public enum ContainerPortMappingType
     // Use default to map the container port to a random port on the host
     Default,
 
-    // Use platform proxy to map the container tcp to wss 
+    // Use platform proxy to map the container tcp to wss
     PlatformProxy
 }
 
@@ -142,12 +215,8 @@ public class KubernetesConfig
 {
     public string Namespace { get; set; } = "gzctf-challenges";
     public string KubeConfig { get; set; } = "kube-config.yaml";
-
-    [JsonObjectCreationHandling(JsonObjectCreationHandling.Replace)]
-    public List<string> AllowCidr { get; set; } = ["10.0.0.0/8"];
-
-    [JsonObjectCreationHandling(JsonObjectCreationHandling.Replace)]
-    public List<string> Dns { get; set; } = ["8.8.8.8", "223.5.5.5", "114.114.114.114"];
+    public string[]? AllowCidr { get; set; }
+    public string[]? Dns { get; set; }
 }
 
 public class RegistryConfig
@@ -185,6 +254,55 @@ public class GoogleRecaptchaConfig
 }
 
 #endregion
+
+#region Telemetry
+
+public class TelemetryConfig
+{
+    public bool Enable { get; set; }
+    public PrometheusConfig Prometheus { get; set; } = new();
+    public OpenTelemetryConfig OpenTelemetry { get; set; } = new();
+    public AzureMonitorConfig AzureMonitor { get; set; } = new();
+    public ConsoleConfig Console { get; set; } = new();
+}
+
+public class PrometheusConfig
+{
+    public bool Enable { get; set; }
+    public bool TotalNameSuffixForCounters { get; set; }
+    public ushort? Port { get; set; }
+}
+
+public class OpenTelemetryConfig
+{
+    public bool Enable { get; set; }
+    public OtlpExportProtocol Protocol { get; set; }
+    public string? EndpointUri { get; set; }
+}
+
+public class AzureMonitorConfig
+{
+    public bool Enable { get; set; }
+    public string? ConnectionString { get; set; }
+}
+
+public class ConsoleConfig
+{
+    public bool Enable { get; set; }
+}
+
+#endregion
+
+public class GrafanaLokiOptions
+{
+    public bool Enable { get; set; }
+    public string? EndpointUri { get; set; }
+    public LokiLabel[]? Labels { get; set; }
+    public string[]? PropertiesAsLabels { get; set; }
+    public LokiCredentials? Credentials { get; set; }
+    public string? Tenant { get; set; }
+    public LogLevel? MinimumLevel { get; set; }
+}
 
 public class ForwardedOptions : ForwardedHeadersOptions
 {

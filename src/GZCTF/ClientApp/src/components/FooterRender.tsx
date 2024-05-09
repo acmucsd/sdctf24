@@ -1,11 +1,11 @@
-import { createStyles, TypographyStylesProvider } from '@mantine/core'
+import { TypographyStylesProvider } from '@mantine/core'
+import { createStyles } from '@mantine/emotion'
 import { marked } from 'marked'
 import { forwardRef } from 'react'
 import { MarkdownProps } from '@Components/MarkdownRender'
 import { useIsMobile } from '@Utils/ThemeOverride'
 
-const useFooterStyles = createStyles((theme) => {
-  const sc = (dark: any, light: any) => (theme.colorScheme === 'dark' ? dark : light)
+const useFooterStyles = createStyles((theme, _, u) => {
   const cs = theme.colors
 
   return {
@@ -13,7 +13,7 @@ const useFooterStyles = createStyles((theme) => {
       overflowX: 'auto',
       textAlign: 'center',
       fontSize: theme.fontSizes.sm,
-      color: theme.fn.dimmed(),
+      color: theme.colors.dimmed,
 
       '& p': {
         wordBreak: 'break-word',
@@ -23,7 +23,7 @@ const useFooterStyles = createStyles((theme) => {
       },
 
       '& :not(pre) > code': {
-        color: theme.fn.dimmed(),
+        color: theme.colors.dimmed,
         whiteSpace: 'normal',
         fontSize: '0.95em',
         backgroundColor: 'transparent',
@@ -32,11 +32,17 @@ const useFooterStyles = createStyles((theme) => {
       },
 
       '& strong': {
-        color: cs.brand[sc(6, 7)],
+        [u.dark]: {
+          color: cs[theme.primaryColor][6],
+        },
+
+        [u.light]: {
+          color: cs[theme.primaryColor][7],
+        },
       },
 
       '& a': {
-        color: theme.fn.dimmed(),
+        color: theme.colors.dimmed,
         textDecoration: 'none',
         transition: 'all 0.2s ease-in-out',
       },
@@ -60,6 +66,7 @@ export const FooterRender = forwardRef<HTMLDivElement, MarkdownProps>((props, re
   return (
     <TypographyStylesProvider
       ref={ref}
+      c="dimmed"
       className={others.className ? cx(classes.root, others.className) : classes.root}
       {...others}
     >

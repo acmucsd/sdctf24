@@ -32,8 +32,6 @@ Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
 GZCTF.Program.Banner();
 
-FilePath.EnsureDirs();
-
 #region Host
 
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources")
@@ -50,7 +48,7 @@ builder.Services.AddLocalization(options => options.ResourcesPath = "Resources")
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    var kestrelSection = builder.Configuration.GetSection("Kestrel");
+    IConfigurationSection kestrelSection = builder.Configuration.GetSection("Kestrel");
     options.Configure(kestrelSection);
     kestrelSection.Bind(options);
 });
@@ -60,6 +58,8 @@ builder.Logging.SetMinimumLevel(LogLevel.Trace);
 builder.Host.UseSerilog(dispose: true);
 builder.Configuration.AddEnvironmentVariables("GZCTF_");
 Log.Logger = LogHelper.GetInitLogger();
+
+await FilePath.EnsureDirsAsync(builder.Environment);
 
 #endregion Host
 
@@ -98,6 +98,7 @@ else
 #region Configuration
 
 if (!GZCTF.Program.IsTesting)
+{
     try
     {
         builder.Configuration.AddEntityConfiguration(options =>
@@ -117,6 +118,7 @@ if (!GZCTF.Program.IsTesting)
         GZCTF.Program.ExitWithFatalMessage(
             GZCTF.Program.StaticLocalizer[nameof(GZCTF.Resources.Program.Database_ConnectionFailed), e.Message]);
     }
+}
 
 #endregion Configuration
 
@@ -197,9 +199,16 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(o =>
 
 #endregion Identity
 
+#region Telemetry
+
+var telemetryOptions = builder.Configuration.GetSection("Telemetry").Get<TelemetryConfig>();
+builder.Services.AddTelemetry(telemetryOptions);
+
+#endregion
+
 #region Services and Repositories
 
-builder.Services.AddTransient<IMailSender, MailSender>()
+builder.Services.AddSingleton<IMailSender, MailSender>()
     .Configure<EmailConfig>(builder.Configuration.GetSection(nameof(EmailConfig)));
 
 builder.Services.Configure<RegistryConfig>(builder.Configuration.GetSection(nameof(RegistryConfig)));
@@ -295,12 +304,15 @@ app.UseForwardedHeaders();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    app.UseOpenApi(options => options.PostProcess += (document, _) => document.Servers.Clear());
+    app.UseOpenApi(options =>
+    {
+        options.PostProcess += (document, _) => document.Servers.Clear();
+    });
     app.UseSwaggerUi();
 }
 else
 {
-    app.UseExceptionHandler("/Error");
+    app.UseExceptionHandler("/error/500");
     app.UseHsts();
 }
 
@@ -316,6 +328,8 @@ if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Request
     app.UseRequestLogging();
 
 app.UseWebSockets(new() { KeepAliveInterval = TimeSpan.FromMinutes(30) });
+
+app.UseTelemetry(telemetryOptions);
 
 app.MapHealthChecks("/healthz");
 app.MapControllers();
@@ -394,22 +408,18 @@ namespace GZCTF
 
         public static IActionResult InvalidModelStateHandler(ActionContext context)
         {
-            string? errors = null;
-
+            var localizer = context.HttpContext.RequestServices.GetRequiredService<IStringLocalizer<Program>>();
             if (context.ModelState.ErrorCount <= 0)
-                return new JsonResult(
-                    new RequestResponse(errors is [_, ..]
-                        ? errors
-                        : StaticLocalizer[nameof(Resources.Program.Model_ValidationFailed)]))
+                return new JsonResult(new RequestResponse(
+                        localizer[nameof(Resources.Program.Model_ValidationFailed)]))
                 { StatusCode = 400 };
 
-            errors = (from val in context.ModelState.Values
-                      where val.Errors.Count > 0
-                      select val.Errors.FirstOrDefault()?.ErrorMessage).FirstOrDefault();
+            var error = context.ModelState.Values.Where(v => v.Errors.Count > 0)
+                .Select(v => v.Errors.FirstOrDefault()?.ErrorMessage).FirstOrDefault();
 
-            return new JsonResult(new RequestResponse(errors is [_, ..]
-                ? errors
-                : StaticLocalizer[nameof(Resources.Program.Model_ValidationFailed)]))
+            return new JsonResult(new RequestResponse(error is [_, ..]
+                ? error
+                : localizer[nameof(Resources.Program.Model_ValidationFailed)]))
             { StatusCode = 400 };
         }
     }

@@ -26,11 +26,14 @@
         "add": "ヒントを追加"
       },
       "new": "チャレンジを作成",
+      "next": "次のチャレンジ",
       "preview": "チャレンジをプレビュー",
+      "previous": "前のチャレンジ",
       "test_container": {
         "create": "テストコンテナを作成",
         "destroy": "テストコンテナを破棄"
-      }
+      },
+      "update_accept_count": "解答数を更新"
     },
     "games": {
       "challenges": {
@@ -179,9 +182,8 @@
           "label": "チーム人数制限"
         },
         "organizations": {
-          "add": "+ 組織「{{org}} 」を追加する",
-          "description": "参加組織を追加して組織ランキングを開始します",
-          "label": "参加できる組織一覧"
+          "description": "組織を追加してランキングを開始し、空欄の場合は全員が自動的に参加します",
+          "label": "参加できる一組織覧"
         },
         "poster": "ポスター",
         "practice_mode": {
@@ -268,12 +270,24 @@
           "label": "キャプチャ認証を使用"
         }
       },
-      "game": {
+      "container": {
         "auto_destroy": {
-          "description": "ユーザーがチャレンジインスタンスを開いて上限に達したときに、古いインスタンスを自動的に破棄するか",
-          "label": "古いインスタンスを自動的に破棄する"
+          "description": "ユーザーインスタンスが上限を超える場合は古いインスタンスを自動的に破棄する",
+          "label": "古いインスタンスの自動破棄"
         },
-        "title": "ゲームポリシー"
+        "default_lifetime": {
+          "description": "コンテナの既定の有効期限",
+          "label": "既定の有効期限（分）"
+        },
+        "extension_duration": {
+          "description": "コンテナが毎回延長される期間",
+          "label": "延長される期間（分）"
+        },
+        "renewal_window": {
+          "description": "コンテナの有効期限が切れるまでの延長が許可される期間",
+          "label": "許可される期間（分）"
+        },
+        "title": "コンテナーポリシー"
       },
       "platform": {
         "footer": {
@@ -343,6 +357,7 @@
         "created": "チャレンジが作成されました",
         "deleted": "チャレンジが削除されました",
         "flag": {
+          "copied": "フラッグがコピーされました",
           "created": "フラッグが作成されました",
           "deleted": "フラッグが削除されました"
         },
@@ -357,6 +372,7 @@
       },
       "created": "ゲームが作成されました",
       "info": {
+        "accept_count_updated": "解答数が更新されました",
         "deleted": "ゲームが削除されました",
         "info_updated": "ゲーム情報が更新されました",
         "poster": {
@@ -412,7 +428,7 @@
           }
         }
       },
-      "organizations": "指定された参加組織がない場合、組織のないチームの参加が許可されます",
+      "organizations": "参加団体を追加する",
       "participation": {
         "bio": "（自己紹介なし）",
         "team": "（チーム名なし）"

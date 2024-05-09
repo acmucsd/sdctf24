@@ -26,6 +26,7 @@ import { FC, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getProxyUrl } from '@Utils/Shared'
 import { useTooltipStyles } from '@Utils/ThemeOverride'
+import { useConfig } from '@Utils/useConfig'
 import { ClientFlagContext } from '@Api'
 
 interface InstanceEntryProps {
@@ -40,15 +41,18 @@ interface InstanceEntryProps {
 dayjs.extend(duration)
 
 interface CountdownProps {
-  time: string
-  extendNotice: () => void
+  time?: string | null
+  onTimeout?: () => void
+  extendEnabled: boolean
+  enableExtend: () => void
 }
 
-const Countdown: FC<CountdownProps> = ({ time, extendNotice }) => {
+const Countdown: FC<CountdownProps> = (props) => {
+  const { time, onTimeout, extendEnabled, enableExtend } = props
+  const { config } = useConfig()
   const [now, setNow] = useState(dayjs())
-  const end = dayjs(time)
+  const end = time ? dayjs(time) : now.add(config.defaultLifetime ?? 120, 'minutes')
   const countdown = dayjs.duration(end.diff(now))
-  const [haveNoticed, setHaveNoticed] = useState(countdown.asMinutes() < 10)
 
   useEffect(() => {
     if (dayjs() > end) return
@@ -57,22 +61,22 @@ const Countdown: FC<CountdownProps> = ({ time, extendNotice }) => {
   }, [])
 
   useEffect(() => {
-    if (countdown.asSeconds() <= 0) return
-
-    if (countdown.asMinutes() < 10 && !haveNoticed) {
-      extendNotice()
-      setHaveNoticed(true)
-    } else if (countdown.asMinutes() > 10) {
-      setHaveNoticed(false)
-    }
+    if (!extendEnabled && config.renewalWindow && countdown.asMinutes() < config.renewalWindow)
+      enableExtend()
+    if (onTimeout && countdown.asSeconds() <= 0) onTimeout()
   }, [countdown])
 
-  return <Text span>{countdown.asSeconds() > 0 ? countdown.format('HH:mm:ss') : '00:00:00'}</Text>
+  return (
+    <Text span fw="bold">
+      {countdown.asSeconds() > 0 ? countdown.format('HH:mm:ss') : '00:00:00'}
+    </Text>
+  )
 }
 
 export const InstanceEntry: FC<InstanceEntryProps> = (props) => {
   const { test, context, disabled, onCreate, onDestroy } = props
 
+  const { config } = useConfig()
   const clipBoard = useClipboard()
 
   const [withContainer, setWithContainer] = useState(!!context.instanceEntry)
@@ -87,7 +91,7 @@ export const InstanceEntry: FC<InstanceEntryProps> = (props) => {
 
   const { t } = useTranslation()
 
-  const extendNotice = () => {
+  const enableExtend = () => {
     if (canExtend) return
 
     showNotification({
@@ -103,7 +107,7 @@ export const InstanceEntry: FC<InstanceEntryProps> = (props) => {
   useEffect(() => {
     setWithContainer(!!context.instanceEntry)
     const countdown = dayjs.duration(dayjs(context.closeTime ?? 0).diff(dayjs()))
-    setCanExtend(countdown.asMinutes() < 10)
+    setCanExtend(countdown.asMinutes() < (config.renewalWindow ?? 10))
   }, [context])
 
   const onExtend = () => {
@@ -142,17 +146,19 @@ export const InstanceEntry: FC<InstanceEntryProps> = (props) => {
 
   if (!withContainer) {
     return test ? (
-      <Text size="md" color="dimmed" fw={600} pt={30}>
+      <Text size="md" c="dimmed" fw="bold" pt={30}>
         {t('challenge.content.instance.test.no_container')}
       </Text>
     ) : (
-      <Group position="apart" pt="xs" noWrap>
-        <Stack align="left" spacing={0}>
-          <Text size="sm" fw={600}>
+      <Group justify="space-between" pt="xs" wrap="nowrap">
+        <Stack align="left" gap={0}>
+          <Text size="sm" fw="bold">
             {t('challenge.content.instance.no_container.message')}
           </Text>
-          <Text size="xs" color="dimmed" fw={600}>
-            {t('challenge.content.instance.no_container.note')}
+          <Text size="xs" c="dimmed" fw="bold">
+            {t('challenge.content.instance.no_container.note', {
+              min: config.defaultLifetime,
+            })}
           </Text>
         </Stack>
 
@@ -164,13 +170,17 @@ export const InstanceEntry: FC<InstanceEntryProps> = (props) => {
   }
 
   return (
-    <Stack spacing={2} w="100%">
+    <Stack gap={2} w="100%">
       <TextInput
-        label={<Text fw={600}>{t('challenge.content.instance.entry.label')}</Text>}
+        label={
+          <Text size="sm" fw="bold">
+            {t('challenge.content.instance.entry.label')}
+          </Text>
+        }
         description={
           isPlatformProxy &&
           !test && (
-            <Text>
+            <Text size="sm">
               {t('challenge.content.instance.entry.description.proxy')}
               <Anchor
                 href="https://github.com/XDSEC/WebSocketReflectorX/releases"
@@ -182,16 +192,16 @@ export const InstanceEntry: FC<InstanceEntryProps> = (props) => {
             </Text>
           )
         }
-        icon={<Icon path={mdiServerNetwork} size={1} />}
+        leftSection={<Icon path={mdiServerNetwork} size={1} />}
         value={copyEntry}
         readOnly
         styles={{
           input: {
-            fontFamily: `${theme.fontFamilyMonospace}, ${theme.fontFamily}`,
+            fontFamily: theme.fontFamilyMonospace,
           },
         }}
         rightSection={
-          <Group spacing={2}>
+          <Group gap={2}>
             <Divider orientation="vertical" pr={4} />
             <Tooltip label={t('common.button.copy')} withArrow classNames={tooltipClasses}>
               <ActionIcon onClick={onCopyEntry}>
@@ -221,18 +231,23 @@ export const InstanceEntry: FC<InstanceEntryProps> = (props) => {
         rightSectionWidth="5rem"
       />
       {!test && (
-        <Group position="apart" pt="xs" noWrap>
-          <Stack align="left" spacing={0}>
+        <Group justify="space-between" pt="xs" wrap="nowrap">
+          <Stack align="left" gap={0}>
             <Text size="sm" fw={600}>
               {t('challenge.content.instance.actions.count_down')}
-              <Countdown time={context.closeTime ?? '0'} extendNotice={extendNotice} />
+              <Countdown
+                time={context.closeTime}
+                extendEnabled={canExtend}
+                enableExtend={enableExtend}
+                onTimeout={onDestroy}
+              />
             </Text>
-            <Text size="xs" color="dimmed" fw={600}>
-              {t('challenge.content.instance.actions.note')}
+            <Text size="xs" c="dimmed" fw={600}>
+              {t('challenge.content.instance.actions.note', { min: config.renewalWindow })}
             </Text>
           </Stack>
 
-          <Group position="right" noWrap spacing="xs">
+          <Group justify="right" wrap="nowrap" gap="xs">
             <Button color="orange" onClick={onExtend} disabled={!canExtend}>
               {t('challenge.button.instance.extend')}
             </Button>

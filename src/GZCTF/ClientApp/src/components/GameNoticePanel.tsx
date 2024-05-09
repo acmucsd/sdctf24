@@ -1,4 +1,13 @@
-import { Card, Center, List, ScrollArea, SegmentedControl, Stack, Text } from '@mantine/core'
+import {
+  Card,
+  Center,
+  List,
+  ScrollArea,
+  SegmentedControl,
+  Stack,
+  Text,
+  useMantineTheme,
+} from '@mantine/core'
 import { showNotification } from '@mantine/notifications'
 import { mdiClose } from '@mdi/js'
 import { Icon } from '@mdi/react'
@@ -88,6 +97,7 @@ const GameNoticePanel: FC = () => {
   const iconMap = NoticTypeIconMap(0.8)
 
   const { t } = useTranslation()
+  const theme = useMantineTheme()
 
   useEffect(() => {
     api.game
@@ -134,7 +144,7 @@ const GameNoticePanel: FC = () => {
 
         if (message.type === NoticeType.Normal) {
           showNotification({
-            color: 'brand',
+            color: theme.primaryColor,
             message: formatNotice(t, message),
             autoClose: 5000,
           })
@@ -166,7 +176,7 @@ const GameNoticePanel: FC = () => {
 
   return (
     <Card shadow="sm" w="20rem">
-      <Stack spacing="xs">
+      <Stack gap="xs">
         <SegmentedControl
           value={filter}
           styles={{
@@ -174,7 +184,7 @@ const GameNoticePanel: FC = () => {
               background: 'transparent',
             },
           }}
-          onChange={(value: NoticeFilter) => setFilter(value)}
+          onChange={(value) => setFilter(value as NoticeFilter)}
           data={[
             { value: NoticeFilter.All, label: t('game.label.notice_type.all') },
             { value: NoticeFilter.Game, label: t('game.label.notice_type.game') },
@@ -184,23 +194,23 @@ const GameNoticePanel: FC = () => {
         />
         {filteredNotices.length ? (
           <ScrollArea offsetScrollbars scrollbarSize={0} h="calc(100vh - 25rem)">
-            <List
-              size="sm"
-              spacing={3}
-              styles={(theme) => ({
-                item: {
-                  fontWeight: 500,
-                  color: theme.colorScheme === 'dark' ? theme.colors.dark[2] : theme.colors.gray[6],
-                },
-              })}
-            >
+            <List size="sm" spacing={3}>
               {filteredNotices.map((notice) => (
-                <List.Item key={notice.id} icon={iconMap.get(notice.type)}>
-                  <Stack spacing={1}>
-                    <Text size="xs" fw={700} c="dimmed">
+                <List.Item
+                  key={notice.id}
+                  icon={iconMap.get(notice.type)}
+                  styles={{ itemWrapper: { alignItems: 'normal' } }}
+                >
+                  <Stack gap={1}>
+                    <Text fz="xs" fw="bold" c="dimmed">
                       {dayjs(notice.time).format('YY/MM/DD HH:mm:ss')}
                     </Text>
-                    <InlineMarkdownRender source={formatNotice(t, notice)} />
+                    <InlineMarkdownRender
+                      fz="sm"
+                      fw={500}
+                      c="dimmed"
+                      source={formatNotice(t, notice)}
+                    />
                   </Stack>
                 </List.Item>
               ))}

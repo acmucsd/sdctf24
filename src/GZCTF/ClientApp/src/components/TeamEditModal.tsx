@@ -18,7 +18,7 @@ import {
   Tooltip,
   useMantineTheme,
 } from '@mantine/core'
-import { Dropzone } from '@mantine/dropzone'
+import { Dropzone, IMAGE_MIME_TYPE } from '@mantine/dropzone'
 import { useClipboard } from '@mantine/hooks'
 import { useModals } from '@mantine/modals'
 import { notifications, showNotification, updateNotification } from '@mantine/notifications'
@@ -27,7 +27,6 @@ import { Icon } from '@mdi/react'
 import { FC, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { showErrorNotification, tryGetErrorMsg } from '@Utils/ApiHelper'
-import { ACCEPT_IMAGE_MIME_TYPE } from '@Utils/ThemeOverride'
 import api, { TeamInfoModel, TeamUserInfoModel } from '@Api'
 
 interface TeamEditModalProps extends ModalProps {
@@ -51,18 +50,18 @@ const TeamMemberInfo: FC<TeamMemberInfoProps> = (props) => {
 
   return (
     <Group
-      position="apart"
+      justify="space-between"
       onMouseEnter={() => setShowBtns(true)}
       onMouseLeave={() => setShowBtns(false)}
     >
-      <Group position="left">
+      <Group justify="left">
         <Avatar alt="avatar" src={user.avatar} radius="xl">
           {user.userName?.slice(0, 1) ?? 'U'}
         </Avatar>
         <Text fw={500}>{user.userName}</Text>
       </Group>
       {isCaptain && showBtns && (
-        <Group spacing="xs" position="right">
+        <Group gap="xs" justify="right">
           <Tooltip label={t('team.label.transfer')}>
             <ActionIcon variant="transparent" onClick={() => onTransferCaptain(user)}>
               <Icon path={mdiStar} size={1} color={theme.colors.yellow[4]} />
@@ -236,6 +235,7 @@ const TeamEditModal: FC<TeamEditModalProps> = (props) => {
           message: t('common.avatar.uploaded'),
           icon: <Icon path={mdiCheck} size={1} />,
           autoClose: true,
+          loading: false,
         })
         setAvatarFile(null)
         const newTeamInfo = { ...teamInfo, avatar: data.data }
@@ -255,6 +255,7 @@ const TeamEditModal: FC<TeamEditModalProps> = (props) => {
           message: tryGetErrorMsg(err, t),
           icon: <Icon path={mdiClose} size={1} />,
           autoClose: true,
+          loading: false,
         })
       })
       .finally(() => {
@@ -291,7 +292,7 @@ const TeamEditModal: FC<TeamEditModalProps> = (props) => {
         props.onClose()
       }}
     >
-      <Stack spacing="lg">
+      <Stack gap="lg">
         {/* Team Info */}
         <Grid grow>
           <Grid.Col span={8}>
@@ -322,23 +323,9 @@ const TeamEditModal: FC<TeamEditModalProps> = (props) => {
         {isCaptain && (
           <PasswordInput
             label={
-              <Group spacing="xs">
+              <Group gap={3}>
                 <Text size="sm">{t('team.label.invite_code')}</Text>
-                <ActionIcon
-                  size="sm"
-                  onClick={onRefreshInviteCode}
-                  sx={(theme) => ({
-                    margin: '0 0 -0.1rem -0.5rem',
-                    '&:hover': {
-                      color:
-                        theme.colorScheme === 'dark'
-                          ? theme.colors[theme.primaryColor][2]
-                          : theme.colors[theme.primaryColor][7],
-                      backgroundColor:
-                        theme.colorScheme === 'dark' ? theme.colors.dark[7] : theme.white,
-                    },
-                  })}
-                >
+                <ActionIcon size="sm" onClick={onRefreshInviteCode}>
                   <Icon path={mdiRefresh} size={1} />
                 </ActionIcon>
               </Group>
@@ -356,7 +343,6 @@ const TeamEditModal: FC<TeamEditModalProps> = (props) => {
             readOnly
           />
         )}
-
         <Textarea
           label={t('team.label.bio')}
           placeholder={teamInfo?.bio ?? t('team.placeholder.bio')}
@@ -368,13 +354,12 @@ const TeamEditModal: FC<TeamEditModalProps> = (props) => {
           maxRows={4}
           onChange={(event) => setTeamInfo({ ...teamInfo, bio: event.target.value })}
         />
-
         <Text size="sm">{t('team.label.members')}</Text>
         <ScrollArea h={140} offsetScrollbars>
-          <Stack spacing="xs">
+          <Stack gap="xs">
             {captain && (
-              <Group position="apart">
-                <Group position="left">
+              <Group justify="space-between">
+                <Group justify="left">
                   <Avatar alt="avatar" src={captain.avatar} radius="xl">
                     {captain.userName?.slice(0, 1) ?? 'C'}
                   </Avatar>
@@ -401,7 +386,6 @@ const TeamEditModal: FC<TeamEditModalProps> = (props) => {
                         </Text>
                       ),
                       onConfirm: () => onTransferCaptain(user.id!),
-
                       confirmProps: { color: 'orange' },
                       zIndex: 10000,
                     })
@@ -409,7 +393,6 @@ const TeamEditModal: FC<TeamEditModalProps> = (props) => {
                   onKick={(user: TeamUserInfoModel) => {
                     modals.openConfirmModal({
                       title: t('team.content.kick.confirm.title'),
-
                       children: (
                         <Text size="sm">
                           {t('team.content.kick.confirm.message', {
@@ -418,7 +401,6 @@ const TeamEditModal: FC<TeamEditModalProps> = (props) => {
                         </Text>
                       ),
                       onConfirm: () => onConfirmKickUser(user.id!),
-
                       confirmProps: { color: 'orange' },
                       zIndex: 10000,
                     })
@@ -450,7 +432,6 @@ const TeamEditModal: FC<TeamEditModalProps> = (props) => {
                   </Text>
                 ),
                 onConfirm: isCaptain ? onConfirmDisbandTeam : onConfirmLeaveTeam,
-
                 confirmProps: { color: 'red' },
                 zIndex: 10000,
               })
@@ -486,9 +467,9 @@ const TeamEditModal: FC<TeamEditModalProps> = (props) => {
           mih={220}
           disabled={disabled}
           maxSize={3 * 1024 * 1024}
-          accept={ACCEPT_IMAGE_MIME_TYPE}
+          accept={IMAGE_MIME_TYPE}
         >
-          <Group position="center" spacing="xl" mih={240} style={{ pointerEvents: 'none' }}>
+          <Group justify="center" gap="xl" mih={240} style={{ pointerEvents: 'none' }}>
             {avatarFile ? (
               <Image fit="contain" src={URL.createObjectURL(avatarFile)} alt="avatar" />
             ) : (

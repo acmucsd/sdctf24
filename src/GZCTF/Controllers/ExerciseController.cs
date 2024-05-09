@@ -1,7 +1,5 @@
 using GZCTF.Middlewares;
-using GZCTF.Repositories.Interface;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 
 namespace GZCTF.Controllers;
 
@@ -13,7 +11,7 @@ namespace GZCTF.Controllers;
 [Route("api/[controller]")]
 [ProducesResponseType(typeof(RequestResponse), StatusCodes.Status401Unauthorized)]
 [ProducesResponseType(typeof(RequestResponse), StatusCodes.Status403Forbidden)]
-public class ExerciseController() : ControllerBase
+public class ExerciseController : ControllerBase
 {
     // TODO: exercise mode support
 }

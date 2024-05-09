@@ -75,7 +75,7 @@ const ChallengeDetailModal: FC<ChallengeDetailModalProps> = (props) => {
   const [flag, setFlag] = useInputState('')
 
   const onCreateContainer = () => {
-    if (!challengeId) return
+    if (!challengeId || disabled) return
     setDisabled(true)
     api.game
       .gameCreateContainer(gameId, challengeId)
@@ -100,7 +100,7 @@ const ChallengeDetailModal: FC<ChallengeDetailModalProps> = (props) => {
   }
 
   const onDestroyContainer = () => {
-    if (!challengeId) return
+    if (!challengeId || disabled) return
     setDisabled(true)
     api.game
       .gameDeleteContainer(gameId, challengeId)
@@ -125,7 +125,7 @@ const ChallengeDetailModal: FC<ChallengeDetailModalProps> = (props) => {
   }
 
   const onExtendContainer = () => {
-    if (!challengeId) return
+    if (!challengeId || disabled) return
     setDisabled(true)
     api.game
       .gameExtendContainerLifetime(gameId, challengeId)
@@ -212,6 +212,7 @@ const ChallengeDetailModal: FC<ChallengeDetailModalProps> = (props) => {
           : t('challenge.notification.flag.accepted.message'),
         icon: <Icon path={mdiCheck} size={1} />,
         autoClose: 8000,
+        loading: false,
       })
       if (isDynamic && challenge.context?.instanceEntry) onDestroyContainer()
       mutate()
@@ -224,6 +225,7 @@ const ChallengeDetailModal: FC<ChallengeDetailModalProps> = (props) => {
         message: wrong_flag_hints[Math.floor(Math.random() * wrong_flag_hints.length)],
         icon: <Icon path={mdiClose} size={1} />,
         autoClose: 8000,
+        loading: false,
       })
     } else {
       updateNotification({
@@ -260,24 +262,26 @@ const ChallengeDetailModal: FC<ChallengeDetailModalProps> = (props) => {
         },
       }}
       title={
-        <Group w="100%" position="apart">
-          <Group>
+        <Group wrap="nowrap" w="100%" justify="space-between" gap="sm">
+          <Group wrap="nowrap" gap="sm">
             {tagData && (
               <Icon path={tagData.icon} size={1} color={theme.colors[tagData?.color][5]} />
             )}
-            <Title order={4}>{challenge?.title ?? title}</Title>
+            <Title w="calc(100% - 1.5rem)" order={4} lineClamp={1}>
+              {challenge?.title ?? title}
+            </Title>
           </Group>
-          <Text fw={700} ff={theme.fontFamilyMonospace}>
+          <Text miw="5em" fw="bold" ff="monospace">
             {challenge?.score ?? score} pts
           </Text>
         </Group>
       }
     >
-      <Stack spacing="sm">
+      <Stack gap="sm">
         <Divider />
-        <Stack spacing="sm" justify="space-between" pos="relative" mih="20vh">
+        <Stack gap="sm" justify="space-between" pos="relative" mih="20vh">
           <LoadingOverlay visible={!challenge} />
-          <Group grow noWrap position="right" align="flex-start" spacing={2}>
+          <Group grow wrap="nowrap" justify="right" align="flex-start" gap={2}>
             <Box className={classes.root} mih="4rem">
               {challenge?.context?.url && (
                 <Tooltip
@@ -292,7 +296,7 @@ const ChallengeDetailModal: FC<ChallengeDetailModalProps> = (props) => {
                     rel="noreferrer"
                     variant="filled"
                     size="lg"
-                    color="brand"
+                    color={theme.primaryColor}
                     top={0}
                     right={0}
                     pos="absolute"
@@ -315,9 +319,9 @@ const ChallengeDetailModal: FC<ChallengeDetailModalProps> = (props) => {
             </Box>
           </Group>
           {challenge?.hints && challenge.hints.length > 0 && (
-            <Stack spacing={2}>
+            <Stack gap={2}>
               {challenge.hints.map((hint) => (
-                <Group spacing="xs" align="flex-start" noWrap>
+                <Group gap="xs" align="flex-start" wrap="nowrap">
                   <Icon path={mdiLightbulbOnOutline} size={0.8} color={theme.colors.yellow[5]} />
                   <InlineMarkdownRender
                     key={hint}
@@ -341,12 +345,12 @@ const ChallengeDetailModal: FC<ChallengeDetailModalProps> = (props) => {
         </Stack>
         <Divider />
         {solved ? (
-          <Text align="center" fw={700}>
+          <Text ta="center" fw="bold">
             {t('challenge.content.already_solved')}
           </Text>
         ) : (
           <form onSubmit={onSubmit}>
-            <Group position="apart" spacing="sm" align="flex-end">
+            <Group justify="space-between" gap="sm" align="flex-end">
               <TextInput
                 placeholder={placeholder}
                 value={flag}
@@ -355,7 +359,7 @@ const ChallengeDetailModal: FC<ChallengeDetailModalProps> = (props) => {
                 style={{ flexGrow: 1 }}
                 styles={{
                   input: {
-                    fontFamily: `${theme.fontFamilyMonospace}, ${theme.fontFamily}`,
+                    fontFamily: theme.fontFamilyMonospace,
                   },
                 }}
               />

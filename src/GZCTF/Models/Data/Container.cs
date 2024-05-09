@@ -39,6 +39,9 @@ public class Container
     /// <summary>
     /// 容器期望终止时间
     /// </summary>
+    /// <remarks>
+    /// 此处设置 2 小时避免创建后立即被销毁，实际销毁时间由容器管理器决定
+    /// </remarks>
     [Required]
     public DateTimeOffset ExpectStopAt { get; set; } = DateTimeOffset.UtcNow + TimeSpan.FromHours(2);
 
@@ -85,11 +88,18 @@ public class Container
     /// <summary>
     /// 容器实例流量捕获存储路径
     /// </summary>
-    public string TrafficPath(string conn) =>
-        GameInstance is null
-            ? string.Empty
-            : Path.Combine(FilePath.Capture,
-                $"{GameInstance.ChallengeId}/{GameInstance.ParticipationId}/{DateTimeOffset.Now:yyyyMMdd-HH.mm.ss}-{conn}.pcap");
+    public string TrafficPath(string conn)
+    {
+        if (GameInstance is null)
+            return string.Empty;
+
+        var shortId = Id.ToString("N")[..8];
+
+        return Path.Combine(FilePath.Capture,
+            GameInstance.ChallengeId.ToString(),
+            GameInstance.ParticipationId.ToString(),
+            $"{shortId}-{conn}.pcap");
+    }
 
     /// <summary>
     /// 生成容器的元数据信息

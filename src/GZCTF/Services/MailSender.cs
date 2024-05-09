@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.Collections.Concurrent;
+using System.Net.Security;
+using System.Text;
 using GZCTF.Models.Internal;
 using GZCTF.Services.Interface;
 using MailKit.Net.Smtp;
@@ -9,59 +11,87 @@ using MimeKit.Text;
 
 namespace GZCTF.Services;
 
-public class MailSender(
-    IOptions<EmailConfig> options,
-    IOptionsSnapshot<GlobalConfig> globalConfig,
-    ILogger<MailSender> logger,
-    IStringLocalizer<Program> localizer) : IMailSender
+public sealed class MailSender : IMailSender, IDisposable
 {
-    readonly EmailConfig? _options = options.Value;
+    readonly CancellationToken _cancellationToken;
+    readonly CancellationTokenSource _cancellationTokenSource = new();
+    readonly ILogger<MailSender> _logger;
+    readonly ConcurrentQueue<MailContent> _mailQueue = new();
+    readonly EmailConfig? _options;
+    readonly AsyncManualResetEvent _resetEvent = new();
+    readonly SmtpClient? _smtpClient;
+    bool _disposed;
+
+    public MailSender(
+        IOptions<EmailConfig> options,
+        ILogger<MailSender> logger)
+    {
+        _logger = logger;
+        _options = options.Value;
+        _cancellationToken = _cancellationTokenSource.Token;
+
+        if (_options is not { SendMailAddress: not null, Smtp.Host: not null, Smtp.Port: not null })
+            return;
+
+        _smtpClient = new();
+        _smtpClient.AuthenticationMechanisms.Remove("XOAUTH2");
+
+        if (!OperatingSystem.IsWindows())
+            // Some systems may not enable old (non-recommend) ciphers in TLS configuration and lead to failures when
+            // connecting to some SMTP servers, override the default policy to include all ciphers except MD5, SHA1, and NULL
+            _smtpClient.SslCipherSuitesPolicy = new CipherSuitesPolicy(Enum.GetValues<TlsCipherSuite>()
+                .Where(cipher =>
+                {
+                    var cipherName = cipher.ToString();
+                    // Exclude MD5, SHA1, and NULL ciphers for security reasons
+                    return !cipherName.EndsWith("MD5") && !cipherName.EndsWith("SHA") &&
+                           !cipherName.EndsWith("NULL");
+                }));
+
+        Task.Factory.StartNew(MailSenderWorker, _cancellationToken, TaskCreationOptions.LongRunning,
+            TaskScheduler.Default);
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        _cancellationTokenSource.Cancel();
+        _smtpClient?.Dispose();
+        GC.SuppressFinalize(this);
+    }
 
     public async Task<bool> SendEmailAsync(string subject, string content, string to)
     {
-        if (_options?.SendMailAddress is null ||
-            _options?.Smtp?.Host is null ||
-            _options?.Smtp?.Port is null)
-            return true;
-
-        var msg = new MimeMessage();
-        msg.From.Add(new MailboxAddress(_options.SendMailAddress, _options.SendMailAddress));
+        using var msg = new MimeMessage();
+        msg.From.Add(new MailboxAddress(_options!.SendMailAddress, _options.SendMailAddress));
         msg.To.Add(new MailboxAddress(to, to));
         msg.Subject = subject;
         msg.Body = new TextPart(TextFormat.Html) { Text = content };
 
         try
         {
-            using var client = new SmtpClient();
+            await _smtpClient!.SendAsync(msg, _cancellationToken);
 
-            await client.ConnectAsync(_options.Smtp.Host, _options.Smtp.Port.Value);
-            client.AuthenticationMechanisms.Remove("XOAUTH2");
-            await client.AuthenticateAsync(_options.UserName, _options.Password);
-            await client.SendAsync(msg);
-            await client.DisconnectAsync(true);
-
-            logger.SystemLog(Program.StaticLocalizer[nameof(Resources.Program.MailSender_SendMail), to],
+            _logger.SystemLog(Program.StaticLocalizer[nameof(Resources.Program.MailSender_SendMail), to],
                 TaskStatus.Success, LogLevel.Information);
             return true;
         }
         catch (Exception e)
         {
-            logger.LogError(e, Program.StaticLocalizer[nameof(Resources.Program.MailSender_MailSendFailed)]);
+            _logger.LogError(e, Program.StaticLocalizer[nameof(Resources.Program.MailSender_MailSendFailed)]);
             return false;
         }
     }
 
     public async Task SendUrlAsync(MailContent content)
     {
-        var template = globalConfig.Value.EmailTemplate switch
-        {
-            GlobalConfig.DefaultEmailTemplate => localizer[nameof(Resources.Program.MailSender_Template)],
-            _ => globalConfig.Value.EmailTemplate
-        };
-
+        // TODO: use GlobalConfig.DefaultEmailTemplate
         // TODO: use a string formatter library
         // TODO: update default template with new names
-        var emailContent = new StringBuilder(template)
+        var emailContent = new StringBuilder(content.Template)
             .Replace("{title}", content.Title)
             .Replace("{information}", content.Information)
             .Replace("{btnmsg}", content.ButtonMessage)
@@ -69,41 +99,89 @@ public class MailSender(
             .Replace("{userName}", content.UserName)
             .Replace("{url}", content.Url)
             .Replace("{nowtime}", content.Time)
-            .Replace("{platform}", $"{globalConfig.Value.Title}::CTF")
+            .Replace("{platform}", content.Platform)
             .ToString();
 
-        if (!await SendEmailAsync(content.Title, emailContent, content.Email))
-            logger.SystemLog(Program.StaticLocalizer[nameof(Resources.Program.MailSender_MailSendFailed)],
+        var title = $"{content.Title} - {content.Platform}";
+
+        if (!await SendEmailAsync(title, emailContent, content.Email))
+            _logger.SystemLog(Program.StaticLocalizer[nameof(Resources.Program.MailSender_MailSendFailed)],
                 TaskStatus.Failed);
     }
 
-    public bool SendConfirmEmailUrl(string? userName, string? email, string? confirmLink) =>
-        SendUrlIfPossible(userName, email, confirmLink, MailType.ConfirmEmail);
+    public bool SendConfirmEmailUrl(string? userName, string? email, string? confirmLink,
+        IStringLocalizer<Program> localizer, IOptionsSnapshot<GlobalConfig> options) =>
+        SendUrlIfPossible(userName, email, confirmLink, MailType.ConfirmEmail, localizer, options);
 
-    public bool SendChangeEmailUrl(string? userName, string? email, string? resetLink) =>
-        SendUrlIfPossible(userName, email, resetLink, MailType.ChangeEmail);
+    public bool SendChangeEmailUrl(string? userName, string? email, string? resetLink,
+        IStringLocalizer<Program> localizer, IOptionsSnapshot<GlobalConfig> options) =>
+        SendUrlIfPossible(userName, email, resetLink, MailType.ChangeEmail, localizer, options);
 
-    public bool SendResetPasswordUrl(string? userName, string? email, string? resetLink) =>
-        SendUrlIfPossible(userName, email, resetLink, MailType.ResetPassword);
+    public bool SendResetPasswordUrl(string? userName, string? email, string? resetLink,
+        IStringLocalizer<Program> localizer, IOptionsSnapshot<GlobalConfig> options) =>
+        SendUrlIfPossible(userName, email, resetLink, MailType.ResetPassword, localizer, options);
 
-    bool SendUrlIfPossible(string? userName, string? email, string? resetLink, MailType type)
+    async Task MailSenderWorker()
     {
-        if (_options?.SendMailAddress is null)
+        if (_smtpClient is null)
+            return;
+
+        while (!_cancellationToken.IsCancellationRequested)
+        {
+            await _resetEvent.WaitAsync(_cancellationToken);
+            _resetEvent.Reset();
+
+            try
+            {
+                if (!_smtpClient.IsConnected)
+                    await _smtpClient.ConnectAsync(_options!.Smtp!.Host, _options.Smtp.Port!.Value,
+                        cancellationToken: _cancellationToken);
+
+                if (!_smtpClient.IsAuthenticated)
+                    await _smtpClient.AuthenticateAsync(_options!.UserName, _options.Password,
+                        _cancellationToken);
+
+                while (_mailQueue.TryDequeue(out MailContent? content))
+                    await SendUrlAsync(content);
+            }
+            catch (Exception e)
+            {
+                // Failed to establish SMTP connection, clear the queue
+                _mailQueue.Clear();
+
+                _logger.LogError(e, Program.StaticLocalizer[nameof(Resources.Program.MailSender_MailSendFailed)]);
+            }
+            finally
+            {
+                await _smtpClient.DisconnectAsync(true, _cancellationToken);
+            }
+        }
+    }
+
+    bool SendUrlIfPossible(string? userName, string? email, string? resetLink, MailType type,
+        IStringLocalizer<Program> localizer, IOptionsSnapshot<GlobalConfig> options)
+    {
+        if (_smtpClient is null)
             return false;
 
         if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(email) || string.IsNullOrEmpty(resetLink))
         {
-            logger.SystemLog(Program.StaticLocalizer[nameof(Resources.Program.MailSender_InvalidRequest)],
+            _logger.SystemLog(Program.StaticLocalizer[nameof(Resources.Program.MailSender_InvalidRequest)],
                 TaskStatus.Failed);
             return false;
         }
 
-        var content = new MailContent(userName, email, resetLink, type, localizer);
+        var content = new MailContent(userName, email, resetLink, type, localizer, options);
 
-        // do not await
-        Task _ = SendUrlAsync(content);
+        _mailQueue.Enqueue(content);
+        _resetEvent.Set();
 
         return true;
+    }
+
+    ~MailSender()
+    {
+        Dispose();
     }
 }
 
@@ -125,12 +203,19 @@ public class MailContent(
     string email,
     string resetLink,
     MailType type,
-    IStringLocalizer<Program> localizer)
+    // DO NOT use IStringLocalizer<Program> after construction
+    IStringLocalizer<Program> localizer,
+    IOptionsSnapshot<GlobalConfig> globalConfig)
 {
+    /// <summary>
+    /// 邮件模板
+    /// </summary>
+    public string Template { get; } = localizer[nameof(Resources.Program.MailSender_Template)];
+
     /// <summary>
     /// 邮件标题
     /// </summary>
-    public string Title { get; set; } = type switch
+    public string Title { get; } = type switch
     {
         MailType.ConfirmEmail => localizer[nameof(Resources.Program.MailSender_VerifyEmailTitle)],
         MailType.ChangeEmail => localizer[nameof(Resources.Program.MailSender_ChangeEmailTitle)],
@@ -141,7 +226,7 @@ public class MailContent(
     /// <summary>
     /// 邮件信息
     /// </summary>
-    public string Information { get; set; } = type switch
+    public string Information { get; } = type switch
     {
         MailType.ConfirmEmail => localizer[nameof(Resources.Program.MailSender_VerifyEmailContent), email],
         MailType.ChangeEmail => localizer[nameof(Resources.Program.MailSender_ChangeEmailContent)],
@@ -152,7 +237,7 @@ public class MailContent(
     /// <summary>
     /// 邮件按钮显示内容
     /// </summary>
-    public string ButtonMessage { get; set; } = type switch
+    public string ButtonMessage { get; } = type switch
     {
         MailType.ConfirmEmail => localizer[nameof(Resources.Program.MailSender_VerifyEmailButton)],
         MailType.ChangeEmail => localizer[nameof(Resources.Program.MailSender_ChangeEmailButton)],
@@ -163,20 +248,25 @@ public class MailContent(
     /// <summary>
     /// 用户名
     /// </summary>
-    public string UserName { get; set; } = userName;
+    public string UserName { get; } = userName;
 
     /// <summary>
     /// 用户邮箱
     /// </summary>
-    public string Email { get; set; } = email;
+    public string Email { get; } = email;
 
     /// <summary>
     /// 邮件链接
     /// </summary>
-    public string Url { get; set; } = resetLink;
+    public string Url { get; } = resetLink;
 
     /// <summary>
     /// 发信时间
     /// </summary>
-    public string Time { get; set; } = DateTimeOffset.UtcNow.ToString("u");
+    public string Time { get; } = DateTimeOffset.UtcNow.ToString("u");
+
+    /// <summary>
+    /// 平台名称
+    /// </summary>
+    public string Platform { get; } = $"{globalConfig.Value.Title}::CTF";
 }

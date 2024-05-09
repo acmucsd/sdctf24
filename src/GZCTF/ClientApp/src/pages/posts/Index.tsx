@@ -3,9 +3,8 @@ import { mdiPlus } from '@mdi/js'
 import { Icon } from '@mdi/react'
 import { FC, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router'
+import { useNavigate } from 'react-router-dom'
 import PostCard from '@Components/PostCard'
-import StickyHeader from '@Components/StickyHeader'
 import WithNavBar from '@Components/WithNavbar'
 import { RequireRole } from '@Components/WithRole'
 import { showErrorNotification } from '@Utils/ApiHelper'
@@ -59,21 +58,24 @@ const Posts: FC = () => {
   }
 
   return (
-    <WithNavBar isLoading={!posts} minWidth={0}>
+    <WithNavBar isLoading={!posts} minWidth={0} withHeader stickyHeader>
       <Stack justify="space-between" mb="3rem">
-        <StickyHeader />
-        <Stack>
-          {posts
-            ?.slice((activePage - 1) * ITEMS_PER_PAGE, activePage * ITEMS_PER_PAGE)
-            .map((post) => <PostCard key={post.id} post={post} onTogglePinned={onTogglePinned} />)}
-        </Stack>
+        {posts
+          ?.slice((activePage - 1) * ITEMS_PER_PAGE, activePage * ITEMS_PER_PAGE)
+          .map((post) => <PostCard key={post.id} post={post} onTogglePinned={onTogglePinned} />)}
         {(posts?.length ?? 0) > ITEMS_PER_PAGE && (
           <Pagination
-            position="center"
             my={20}
             value={activePage}
             onChange={setPage}
             total={Math.ceil((posts?.length ?? 0) / ITEMS_PER_PAGE)}
+            styles={{
+              root: {
+                display: 'flex',
+                justifyContent: 'center',
+                flexDirection: 'row',
+              },
+            }}
           />
         )}
       </Stack>
@@ -83,7 +85,7 @@ const Posts: FC = () => {
           variant="filled"
           radius="xl"
           size="md"
-          leftIcon={<Icon path={mdiPlus} size={1} />}
+          leftSection={<Icon path={mdiPlus} size={1} />}
           onClick={() => navigate('/posts/new/edit')}
         >
           {t('post.button.new')}

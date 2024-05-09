@@ -26,11 +26,14 @@
         "add": "Add Hint"
       },
       "new": "New Challenge",
+      "next": "Next",
       "preview": "Preview",
+      "previous": "Previous",
       "test_container": {
         "create": "Create",
         "destroy": "Destroy"
-      }
+      },
+      "update_accept_count": "Update AC Counter"
     },
     "games": {
       "challenges": {
@@ -179,8 +182,7 @@
           "label": "Maximum Team Member"
         },
         "organizations": {
-          "add": "+ Add division \"{{org}}\"",
-          "description": "Add divisions to enable grouped scoreboard",
+          "description": "Add divisions to enable grouped scoreboard, leave empty to disable",
           "label": "List of Participating Divisions"
         },
         "poster": "Poster",
@@ -268,12 +270,24 @@
           "label": "Enable CAPTCHA"
         }
       },
-      "game": {
+      "container": {
         "auto_destroy": {
-          "description": "Whether to auto-destroy the old instance when the creates new instance but meets the limit",
+          "description": "Whether to auto-destroy the old instance when meets the limit",
           "label": "Auto-destroy Old Instances"
         },
-        "title": "Game Policy"
+        "default_lifetime": {
+          "description": "The default lifetime of the container",
+          "label": "Default Lifetime (min)"
+        },
+        "extension_duration": {
+          "description": "The duration of each renewal of the container",
+          "label": "Renewal Duration (min)"
+        },
+        "renewal_window": {
+          "description": "The time window before the container expires to renew",
+          "label": "Renewal Window (min)"
+        },
+        "title": "Container Policy"
       },
       "platform": {
         "footer": {
@@ -343,6 +357,7 @@
         "created": "Challenge created",
         "deleted": "Challenge deleted",
         "flag": {
+          "copied": "Flag copied to clipboard",
           "created": "Flag created",
           "deleted": "Flag deleted"
         },
@@ -357,6 +372,7 @@
       },
       "created": "Game created",
       "info": {
+        "accept_count_updated": "AC counter updated",
         "deleted": "Game deleted",
         "info_updated": "Game updated",
         "poster": {
@@ -412,7 +428,7 @@
           }
         }
       },
-      "organizations": "No divisions specified; teams can join without selecting a division.",
+      "organizations": "Enter to add a division.",
       "participation": {
         "bio": "(no bio)",
         "team": "(no name)"

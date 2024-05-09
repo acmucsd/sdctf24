@@ -5,7 +5,6 @@ using GZCTF.Services.Interface;
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
-using Microsoft.Extensions.Localization;
 
 namespace GZCTF.Services.Container.Manager;
 
@@ -22,7 +21,8 @@ public class KubernetesManager : IContainerManager
         _meta = provider.GetMetadata();
         _client = provider.GetProvider();
 
-        logger.SystemLog(Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_K8sMode)], TaskStatus.Success,
+        logger.SystemLog(Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_K8sMode)],
+            TaskStatus.Success,
             LogLevel.Debug);
     }
 
@@ -35,12 +35,13 @@ public class KubernetesManager : IContainerManager
 
         if (imageName is null)
         {
-            _logger.SystemLog(Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_UnresolvedImageName), config.Image],
+            _logger.SystemLog(
+                Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_UnresolvedImageName), config.Image],
                 TaskStatus.Failed, LogLevel.Warning);
             return null;
         }
 
-        var name = $"{imageName.ToValidRFC1123String("chal")}-{Guid.NewGuid().ToString("N")[..16]}";
+        var name = $"{imageName.ToValidRFC1123String("chal")}-{Ulid.NewUlid().ToString().ToLowerInvariant()}";
 
         var pod = new V1Pod("v1", "Pod")
         {
@@ -62,7 +63,7 @@ public class KubernetesManager : IContainerManager
                         ? Array.Empty<V1LocalObjectReference>()
                         : new List<V1LocalObjectReference> { new() { Name = authSecretName } },
                 DnsPolicy = "None",
-                DnsConfig = new() { Nameservers = options.Dns },
+                DnsConfig = new() { Nameservers = options.Dns ?? ["8.8.8.8", "223.5.5.5", "114.114.114.114"] },
                 EnableServiceLinks = false,
                 Containers =
                 [
@@ -92,7 +93,8 @@ public class KubernetesManager : IContainerManager
                         }
                     }
                 ],
-                RestartPolicy = "Never"
+                RestartPolicy = "Never",
+                AutomountServiceAccountToken = false
             }
         };
 
@@ -107,14 +109,16 @@ public class KubernetesManager : IContainerManager
                     e.Response.StatusCode],
                 TaskStatus.Failed, LogLevel.Warning);
             _logger.SystemLog(
-                Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_ContainerCreationFailedResponse), name,
+                Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_ContainerCreationFailedResponse),
+                    name,
                     e.Response.Content],
                 TaskStatus.Failed, LogLevel.Error);
             return null;
         }
         catch (Exception e)
         {
-            _logger.LogError(e, Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_ContainerCreationFailed), name]);
+            _logger.LogError(e,
+                Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_ContainerCreationFailed), name]);
             return null;
         }
 
@@ -128,9 +132,6 @@ public class KubernetesManager : IContainerManager
         }
 
         // Service is needed for port mapping
-        var container =
-            new Models.Data.Container { ContainerId = name, Image = config.Image, Port = config.ExposedPort };
-
         var service = new V1Service("v1", "Service")
         {
             Metadata = new V1ObjectMeta
@@ -186,15 +187,19 @@ public class KubernetesManager : IContainerManager
                 // ignored
             }
 
-            _logger.LogError(e, Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_ServiceCreationFailed), name]);
+            _logger.LogError(e,
+                Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_ServiceCreationFailed), name]);
             return null;
         }
 
-        container.StartedAt = DateTimeOffset.UtcNow;
-        container.ExpectStopAt = container.StartedAt + TimeSpan.FromHours(2);
-        container.IP = service.Spec.ClusterIP;
-        container.Port = config.ExposedPort;
-        container.IsProxy = !_meta.ExposePort;
+        var container = new Models.Data.Container
+        {
+            ContainerId = name,
+            Image = config.Image,
+            Port = config.ExposedPort,
+            IP = service.Spec.ClusterIP,
+            IsProxy = !_meta.ExposePort
+        };
 
         if (!_meta.ExposePort)
             return container;
@@ -234,7 +239,8 @@ public class KubernetesManager : IContainerManager
         catch (Exception e)
         {
             _logger.LogError(e,
-                Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_ContainerDeletionFailed), container.ContainerId]);
+                Program.StaticLocalizer[nameof(Resources.Program.ContainerManager_ContainerDeletionFailed),
+                    container.ContainerId]);
             return;
         }
 
