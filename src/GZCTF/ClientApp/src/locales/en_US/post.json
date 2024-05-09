@@ -7,27 +7,27 @@
     "summary": "Summary"
   },
   "title": {
-    "index": "Posts"
+    "index": "Announcements"
   },
   "button": {
-    "new": "New Post",
-    "edit": "Edit Post",
-    "goto": "Go to Post",
-    "save": "Save Post",
-    "delete": "Delete Post"
+    "new": "New Announcement",
+    "edit": "Edit Announcement",
+    "goto": "Go to Announcement",
+    "save": "Save Announcement",
+    "delete": "Delete Announcement"
   },
   "content": {
     "metadata": "{{author}} published on {{date}}",
     "pinned": "[Pinned]",
     "details": "View Details",
-    "delete": "Are you sure you want to delete post {{title}}?",
+    "delete": "Are you sure you want to delete announcement {{title}}?",
     "updated": {
-      "title": "Post has been changed",
-      "content": "The post has been changed. Save it?"
+      "title": "Announcement has been changed",
+      "content": "The announcement has been changed. Save it?"
     }
   },
   "notification": {
-    "saved": "Post has been saved",
-    "created": "Post has been created"
+    "saved": "Announcement has been saved",
+    "created": "Announcement has been created"
   }
 }
