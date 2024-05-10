@@ -55,7 +55,7 @@ const GameCard: FC<GameCardProps> = ({ game, ...others }) => {
     >
       <Card.Section>
         <Group wrap="nowrap" align="flex-start">
-          <BackgroundImage src={poster ?? ''} h="10rem" maw="20rem" miw="20rem">
+          <BackgroundImage src={poster ?? ''} h="10rem" maw="20rem">
             <Center h="100%">
               {!poster && <Icon path={mdiFlagOutline} size={4} color={theme.colors.gray[5]} />}
             </Center>
