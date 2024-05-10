@@ -25,6 +25,7 @@ import ChallengeDetailModal from '@Components/ChallengeDetailModal'
 import Empty from '@Components/Empty'
 import WriteupSubmitModal from '@Components/WriteupSubmitModal'
 import { useChallengeTagLabelMap, SubmissionTypeIconMap } from '@Utils/Shared'
+import { useIsMobile } from '@Utils/ThemeOverride'
 import { useGame, useGameTeamInfo } from '@Utils/useGame'
 import { ChallengeInfo, ChallengeTag, SubmissionType } from '@Api'
 
@@ -63,16 +64,12 @@ const ChallengePanel: FC = () => {
   const challengeTagLabelMap = useChallengeTagLabelMap()
   const { t } = useTranslation()
 
+  const isMobile = useIsMobile(1300)
+
   // skeleton for loading
   if (!challenges) {
     return (
-      <Group
-        gap="sm"
-        wrap="nowrap"
-        justify="space-between"
-        align="flex-start"
-        maw="calc(100% - 20rem)"
-      >
+      <Group gap="sm" wrap="nowrap" justify="space-between" align="flex-start">
         <Stack miw="10rem" gap={6}>
           {Array(10)
             .fill(null)
@@ -88,7 +85,6 @@ const ChallengePanel: FC = () => {
           pt={0}
           spacing="sm"
           pos="relative"
-          w="calc(100% - 9rem)"
           cols={{ base: 3, w18: 4, w24: 6, w30: 8, w36: 10, w42: 12, w48: 14 }}
         >
           {Array(8)
@@ -139,9 +135,9 @@ const ChallengePanel: FC = () => {
       wrap="nowrap"
       justify="space-between"
       align="flex-start"
-      miw="calc(100% - 20rem)"
+      style={{ flex: '100% 1' }}
     >
-      <Stack miw="10rem">
+      <Stack miw="10rem" style={{ position: isMobile ? 'sticky' : undefined, top: '2rem' }}>
         {game?.writeupRequired && (
           <>
             <Button
@@ -218,18 +214,18 @@ const ChallengePanel: FC = () => {
         </Tabs>
       </Stack>
       <ScrollArea
-        w="calc(100% - 9rem)"
-        h="calc(100vh - 7rem)"
+        h={isMobile ? undefined : 'calc(100vh - 7rem)'}
         pos="relative"
         offsetScrollbars
         scrollbarSize={4}
+        style={{ flex: 'auto' }}
       >
         {currentChallenges && currentChallenges.length ? (
           <SimpleGrid
             p="xs"
             pt={0}
             spacing="sm"
-            cols={{ base: 3, w18: 4, w24: 6, w30: 8, w36: 10, w42: 12, w48: 14 }}
+            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}
           >
             {currentChallenges?.map((chal) => (
               <ChallengeCard

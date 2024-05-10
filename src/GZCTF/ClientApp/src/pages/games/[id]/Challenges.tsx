@@ -6,16 +6,25 @@ import TeamRank from '@Components/TeamRank'
 import WithGameTab from '@Components/WithGameTab'
 import WithNavBar from '@Components/WithNavbar'
 import WithRole from '@Components/WithRole'
+import { useIsMobile } from '@Utils/ThemeOverride'
 import { Role } from '@Api'
 
 const Challenges: FC = () => {
+  const isMobile = useIsMobile(1300)
+
   return (
     <WithNavBar width="90%">
       <WithRole requiredRole={Role.User}>
         <WithGameTab>
-          <Group gap="sm" justify="space-between" align="flex-start" grow wrap="nowrap">
+          <Group
+            gap="sm"
+            justify="space-between"
+            align="flex-start"
+            wrap={isMobile ? 'wrap' : 'nowrap'}
+            style={{ marginBottom: '2rem' }}
+          >
             <ChallengePanel />
-            <Stack maw="20rem">
+            <Stack style={{ flexBasis: '20rem', flexGrow: 1 }}>
               <TeamRank />
               <GameNoticePanel />
             </Stack>
