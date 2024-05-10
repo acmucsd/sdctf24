@@ -116,25 +116,23 @@ const Home: FC = () => {
                     <PostCard key={post.id} post={post} onTogglePinned={onTogglePinned} />
                   ))}
             </Stack>
-            {!isMobile && (
-              <nav className={classes.wrapper}>
-                <div className={classes.inner}>
-                  <Stack>
-                    <Group>
-                      <Icon
-                        path={mdiFlagCheckered}
-                        size={1.5}
-                        color={theme.colors[theme.primaryColor][4]}
-                      />
-                      <Title order={3}>
-                        <Trans i18nKey="common.content.home.recent_games" />
-                      </Title>
-                    </Group>
-                    {recentGames?.map((game) => <RecentGame key={game.id} game={game} />)}
-                  </Stack>
-                </div>
-              </nav>
-            )}
+            <nav className={classes.wrapper}>
+              <div className={classes.inner}>
+                <Stack>
+                  <Group>
+                    <Icon
+                      path={mdiFlagCheckered}
+                      size={1.5}
+                      color={theme.colors[theme.primaryColor][4]}
+                    />
+                    <Title order={3}>
+                      <Trans i18nKey="common.content.home.recent_games" />
+                    </Title>
+                  </Group>
+                  {recentGames?.map((game) => <RecentGame key={game.id} game={game} />)}
+                </Stack>
+              </div>
+            </nav>
           </Group>
         </Stack>
       </Stack>

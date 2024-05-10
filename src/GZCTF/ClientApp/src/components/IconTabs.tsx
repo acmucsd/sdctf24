@@ -163,7 +163,7 @@ const IconTabs: FC<IconTabsProps> = (props) => {
   ))
 
   return (
-    <Group gap={0} justify="space-between" w="100%" wrap="nowrap">
+    <Group gap={0} justify="space-between" w="100%">
       {aside}
       {withIcon && (
         <LogoHeader

@@ -160,17 +160,12 @@ const PostEdit: FC = () => {
       <WithRole requiredRole={Role.Admin}>
         <Stack mt={isMobile ? 25 : 30}>
           <Group justify={isMobile ? 'right' : 'space-between'}>
-            {!isMobile && (
-              <Title
-                order={1}
-                c={alpha(
-                  colorScheme === 'dark' ? theme.colors.light[6] : theme.colors.gray[7],
-                  0.5
-                )}
-              >
-                {`> ${postId === 'new' ? t('post.button.new') : t('post.button.edit')}`}
-              </Title>
-            )}
+            <Title
+              order={1}
+              c={alpha(colorScheme === 'dark' ? theme.colors.light[6] : theme.colors.gray[7], 0.5)}
+            >
+              {`> ${postId === 'new' ? t('post.button.new') : t('post.button.edit')}`}
+            </Title>
             <Group justify="right">
               {postId?.length === 8 && (
                 <>

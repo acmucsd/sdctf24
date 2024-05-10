@@ -60,7 +60,7 @@ const TeamRank: FC<CardProps> = (props) => {
     <Card {...props} shadow="sm" p="md">
       <Stack gap={8}>
         <Group gap="sm" wrap="nowrap">
-          <Avatar alt="avatar" color="cyan" size={50} radius="md" src={teamInfo?.rank?.avatar}>
+          <Avatar alt="avatar" color="orange" size={50} radius="md" src={teamInfo?.rank?.avatar}>
             {teamInfo?.rank?.name?.slice(0, 1) ?? 'T'}
           </Avatar>
           <Skeleton visible={!teamInfo}>
@@ -105,28 +105,26 @@ const TeamRank: FC<CardProps> = (props) => {
           </Stack>
         </Group>
         <Progress value={solved * 100} />
-        {!isMobile && (
-          <PasswordInput
-            value={teamInfo?.teamToken}
-            readOnly
-            leftSection={<Icon path={mdiKey} size={1} />}
-            variant="unstyled"
-            onClick={() => {
-              clipboard.copy(teamInfo?.teamToken)
-              showNotification({
-                color: 'teal',
-                message: t('team.notification.token.copied'),
-                icon: <Icon path={mdiCheck} size={1} />,
-              })
-            }}
-            styles={{
-              innerInput: {
-                cursor: 'copy',
-                fontFamily: theme.fontFamilyMonospace,
-              },
-            }}
-          />
-        )}
+        <PasswordInput
+          value={teamInfo?.teamToken}
+          readOnly
+          leftSection={<Icon path={mdiKey} size={1} />}
+          variant="unstyled"
+          onClick={() => {
+            clipboard.copy(teamInfo?.teamToken)
+            showNotification({
+              color: 'teal',
+              message: t('team.notification.token.copied'),
+              icon: <Icon path={mdiCheck} size={1} />,
+            })
+          }}
+          styles={{
+            innerInput: {
+              cursor: 'copy',
+              fontFamily: theme.fontFamilyMonospace,
+            },
+          }}
+        />
       </Stack>
     </Card>
   )

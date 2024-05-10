@@ -3,7 +3,10 @@ import { createStyles } from '@mantine/emotion'
 import {
   mdiAccountCircleOutline,
   mdiAccountGroupOutline,
+  mdiBullhornOutline,
   mdiCached,
+  mdiFlagOutline,
+  mdiHomeVariantOutline,
   mdiLogout,
   mdiTranslate,
   mdiWeatherNight,
@@ -96,6 +99,27 @@ const AppHeader: FC = () => {
                 <>
                   <Menu.Item
                     component={Link}
+                    to="/"
+                    leftSection={<Icon path={mdiHomeVariantOutline} size={1} />}
+                  >
+                    {t('common.tab.home')}
+                  </Menu.Item>
+                  <Menu.Item
+                    component={Link}
+                    to="/posts"
+                    leftSection={<Icon path={mdiBullhornOutline} size={1} />}
+                  >
+                    {t('common.tab.post')}
+                  </Menu.Item>
+                  <Menu.Item
+                    component={Link}
+                    to="/games"
+                    leftSection={<Icon path={mdiFlagOutline} size={1} />}
+                  >
+                    {t('common.tab.game')}
+                  </Menu.Item>
+                  <Menu.Item
+                    component={Link}
                     to="/teams"
                     leftSection={<Icon path={mdiAccountGroupOutline} size={1} />}
                   >
@@ -107,12 +131,6 @@ const AppHeader: FC = () => {
                     leftSection={<Icon path={mdiAccountCircleOutline} size={1} />}
                   >
                     {t('common.tab.account.profile')}
-                  </Menu.Item>
-                  <Menu.Item
-                    onClick={clearLocalCache}
-                    leftSection={<Icon path={mdiCached} size={1} />}
-                  >
-                    {t('common.tab.account.clean_cache')}
                   </Menu.Item>
                   <Menu.Item
                     color="red"

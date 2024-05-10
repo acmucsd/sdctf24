@@ -40,7 +40,7 @@ const WithNavBar: FC<WithNavBarProps> = ({
   const isMobile = useIsMobile()
 
   return (
-    <WithWiderScreen minWidth={minWidth}>
+    <WithWiderScreen minWidth={0}>
       <Watermark
         text={user?.userId ?? ''}
         textColor={colorScheme === 'dark' ? theme.colors.gray[3] : theme.colors.gray[7]}
