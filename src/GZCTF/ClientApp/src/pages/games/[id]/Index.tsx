@@ -213,14 +213,11 @@ const GameDetail: FC = () => {
           {t('game.button.leave')}
         </Button>
       )}
-      {status === ParticipationStatus.Accepted &&
-        started &&
-        !isMobile &&
-        (!finished || game?.practiceMode) && (
-          <Button onClick={() => navigate(`/games/${numId}/challenges`)}>
-            {t('game.button.challenges')}
-          </Button>
-        )}
+      {status === ParticipationStatus.Accepted && started && (!finished || game?.practiceMode) && (
+        <Button onClick={() => navigate(`/games/${numId}/challenges`)}>
+          {t('game.button.challenges')}
+        </Button>
+      )}
     </>
   )
 

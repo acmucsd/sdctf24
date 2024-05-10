@@ -3,7 +3,10 @@ import { createStyles } from '@mantine/emotion'
 import {
   mdiAccountCircleOutline,
   mdiAccountGroupOutline,
+  mdiBullhornOutline,
   mdiCached,
+  mdiFlagOutline,
+  mdiHomeVariantOutline,
   mdiLogout,
   mdiPalette,
   mdiTranslate,
@@ -96,6 +99,27 @@ const AppHeader: FC<AppControlProps> = ({ openColorModal }) => {
             <Menu.Dropdown>
               {user && !error ? (
                 <>
+                  <Menu.Item
+                    component={Link}
+                    to="/"
+                    leftSection={<Icon path={mdiHomeVariantOutline} size={1} />}
+                  >
+                    {t('common.tab.home')}
+                  </Menu.Item>
+                  <Menu.Item
+                    component={Link}
+                    to="/posts"
+                    leftSection={<Icon path={mdiBullhornOutline} size={1} />}
+                  >
+                    {t('common.tab.post')}
+                  </Menu.Item>
+                  <Menu.Item
+                    component={Link}
+                    to="/games"
+                    leftSection={<Icon path={mdiFlagOutline} size={1} />}
+                  >
+                    {t('common.tab.game')}
+                  </Menu.Item>
                   <Menu.Item
                     component={Link}
                     to="/teams"
