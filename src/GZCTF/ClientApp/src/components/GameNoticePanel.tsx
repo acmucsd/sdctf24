@@ -175,7 +175,7 @@ const GameNoticePanel: FC = () => {
   )
 
   return (
-    <Card shadow="sm" w="20rem">
+    <Card shadow="sm">
       <Stack gap="xs">
         <SegmentedControl
           value={filter}
@@ -193,7 +193,7 @@ const GameNoticePanel: FC = () => {
           ]}
         />
         {filteredNotices.length ? (
-          <ScrollArea offsetScrollbars scrollbarSize={0} h="calc(100vh - 25rem)">
+          <ScrollArea offsetScrollbars scrollbarSize={0}>
             <List size="sm" spacing={3}>
               {filteredNotices.map((notice) => (
                 <List.Item
