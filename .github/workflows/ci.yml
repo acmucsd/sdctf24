@@ -80,18 +80,3 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
           push: true
-
-      - name: Prune old packages
-        uses: vlaurin/action-ghcr-prune@v0.6.0
-        with:
-          dry-run: false
-          token: ${{ secrets.PACKAGE_TOKEN }}
-          container: ${{ github.event.repository.name }}/gzctf
-          keep-tags-regexes: ^v\d+\.\d+\.\d+$
-          prune-tags-regexes: ^[0-9a-f]{6,40}
-          keep-tags: |
-            latest
-            main
-            develop
-          keep-last: 20
-          prune-untagged: false
