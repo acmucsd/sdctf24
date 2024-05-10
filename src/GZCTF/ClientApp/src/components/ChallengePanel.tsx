@@ -213,14 +213,14 @@ const ChallengePanel: FC = () => {
           </Tabs.List>
         </Tabs>
       </Stack>
-      <ScrollArea
-        h={isMobile ? undefined : 'calc(100vh - 7rem)'}
-        pos="relative"
-        offsetScrollbars
-        scrollbarSize={4}
-        style={{ flex: 'auto' }}
-      >
-        {currentChallenges && currentChallenges.length ? (
+      {currentChallenges && currentChallenges.length ? (
+        <ScrollArea
+          h={isMobile ? undefined : 'calc(100vh - 7rem)'}
+          pos="relative"
+          offsetScrollbars
+          scrollbarSize={4}
+          style={{ flex: 'auto' }}
+        >
           <SimpleGrid
             p="xs"
             pt={0}
@@ -246,15 +246,15 @@ const ChallengePanel: FC = () => {
               />
             ))}
           </SimpleGrid>
-        ) : (
-          <Center h="calc(100vh - 10rem)">
-            <Stack gap={0}>
-              <Title order={2}>{t('game.content.all_solved.title')}</Title>
-              <Text>{t('game.content.all_solved.comment')}</Text>
-            </Stack>
-          </Center>
-        )}
-      </ScrollArea>
+        </ScrollArea>
+      ) : (
+        <Center style={{ flex: 'auto', alignSelf: 'center' }}>
+          <Stack gap={0} style={{ padding: '1rem' }}>
+            <Title order={2}>{t('game.content.all_solved.title')}</Title>
+            <Text>{t('game.content.all_solved.comment')}</Text>
+          </Stack>
+        </Center>
+      )}
       {game?.writeupRequired && (
         <WriteupSubmitModal
           opened={writeupSubmitOpened}
